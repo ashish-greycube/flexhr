@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include flexhr *.css
+recursive-include flexhr *.csv
+recursive-include flexhr *.html
+recursive-include flexhr *.ico
+recursive-include flexhr *.js
+recursive-include flexhr *.json
+recursive-include flexhr *.md
+recursive-include flexhr *.png
+recursive-include flexhr *.py
+recursive-include flexhr *.svg
+recursive-include flexhr *.txt
+recursive-exclude flexhr *.pyc
