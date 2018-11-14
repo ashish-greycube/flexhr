@@ -59,12 +59,7 @@ def punch_in(userid):
 					check_in.employee_name = employee_doc.employee_name
 					check_in.in_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 					# check_in.save()
-					return [{
-						"status":"success",
-						"employee_name":employee_doc.employee_name,
-						"userid":employee_doc.attendance_user_id,
-						"in_time":check_in.in_time,
-					}]
+					return "ok"
 		else:
 			return rfid_unknown(userid)
 	# else:
