@@ -59,7 +59,8 @@ def punch_in(userid):
 					check_in.employee_name = employee_doc.employee_name
 					check_in.in_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 					# check_in.save()
-					return "ok"
+					# headers['Content-Type'] = 'text/html'
+					return "OK"
 		else:
 			return rfid_unknown(userid)
 	# else:
