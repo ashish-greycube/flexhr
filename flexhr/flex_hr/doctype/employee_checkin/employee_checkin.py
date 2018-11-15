@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import datetime, time
 import frappe
 from frappe.model.document import Document
+from werkzeug.wrappers import Response
 
 class EmployeeCheckin(Document):
 	def validate(self):
@@ -40,7 +41,7 @@ class EmployeeCheckin(Document):
 @frappe.whitelist(allow_guest=True)
 def punch_in(userid):
 	# if "Auto Attendance" in frappe.get_roles(frappe.session.user):
-	
+		print '#############'
 		employee = frappe.get_value('Employee', {'attendance_user_id': userid}, "name")
 		if employee:
 			employee_doc = frappe.get_doc("Employee", employee)
@@ -60,7 +61,13 @@ def punch_in(userid):
 					check_in.in_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 					# check_in.save()
 					# headers['Content-Type'] = 'text/html'
-					return "OK"
+					# frappe.response['type'] = 'text/html'
+					# frappe.response['type'] = 'text/plain'
+					response = Response()
+					response.mimetype = 'text/plain'
+					response.charset = 'utf-8'
+					response.data = 'OK'
+					return response
 		else:
 			return rfid_unknown(userid)
 	# else:
