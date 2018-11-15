@@ -40,8 +40,12 @@ class EmployeeCheckin(Document):
 
 @frappe.whitelist(allow_guest=True)
 def punch_in(userid):
+		response = Response()
+		response.mimetype = 'text/plain'
+		response.charset = 'utf-8'
+		response.data = 'OK'
+		return response
 	# if "Auto Attendance" in frappe.get_roles(frappe.session.user):
-		print '#############'
 		employee = frappe.get_value('Employee', {'attendance_user_id': userid}, "name")
 		if employee:
 			employee_doc = frappe.get_doc("Employee", employee)
@@ -60,9 +64,6 @@ def punch_in(userid):
 					check_in.employee_name = employee_doc.employee_name
 					check_in.in_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 					# check_in.save()
-					# headers['Content-Type'] = 'text/html'
-					# frappe.response['type'] = 'text/html'
-					# frappe.response['type'] = 'text/plain'
 					response = Response()
 					response.mimetype = 'text/plain'
 					response.charset = 'utf-8'
