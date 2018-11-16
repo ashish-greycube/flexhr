@@ -42,17 +42,12 @@ class EmployeeCheckin(Document):
 
 @frappe.whitelist(allow_guest=True)
 def punch_in(att_type,stgid,att_time,userid,auth_token=None):
-	create_checkin_record(att_type,stgid,att_time,userid,auth_token)
-	return standard_response()
-
-@frappe.whitelist(allow_guest=True)
-def punch_in1(att_type,stgid,att_time,userid,auth_token=None):
 	employee = frappe.get_value('Employee', {'attendance_user_id': userid}, "name")
 	if auth_token:
 		if auth_token != frappe.db.get_single_value("Attendance Device Settings", "auth_token"):
 			remark = "Authorization Token Doesn't Match"
 			status = 'Fail'
-			create_checkin_record(att_type,stgid,att_time,userid,remark,status,auth_token,employee)
+			create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
 			return standard_response()
 		else:
 			if employee:
@@ -60,22 +55,24 @@ def punch_in1(att_type,stgid,att_time,userid,auth_token=None):
 				if employee_doc.status == 'Left':
 					remark = 'Employee Not Active. Left'
 					status = 'Fail'
-					create_checkin_record(att_type,stgid,att_time,userid,remark,status,auth_token,employee)
+					create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
 					return standard_response()
 				else:
 					remark = ''
 					status = 'Pass'
-					create_checkin_record(att_type,stgid,att_time,userid,remark,status,auth_token,employee)
+					create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
 					return standard_response()
 			else:
 				remark = "Attendance Userid Doesn't Match With Any Employee"
 				status = 'Fail'
-				create_checkin_record(att_type,stgid,att_time,userid,remark,status,auth_token,employee=None)
+				employee=None
+				create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
 				return standard_response()
 	else:
 		remark = 'Authorization Token Not Found'
 		status = 'Fail'
-		create_checkin_record(att_type,stgid,att_time,userid,remark,status,auth_token,employee)
+		auth_token=None
+		create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
 		return standard_response()
 
 def standard_response():
@@ -87,18 +84,17 @@ def standard_response():
 
 
 @frappe.whitelist(allow_guest=True)
-def create_checkin_record(att_type,stgid,att_time,userid,auth_token=None,employee=None,remark=None,status=None):
+def create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status):
 	check_in = frappe.new_doc("Employee Checkin")
 	check_in.employee = employee
 	check_in.attendance_user_id = userid
 	check_in.device_id=stgid
 	check_in.auth_token=auth_token
 	check_in.att_type = att_type
-	check_in.att_time = datetime.datetime.fromtimestamp(int(att_time)).strftime("%Y-%m-%d %H:%M:%S")
+	check_in.att_time = datetime.datetime.fromtimestamp(float(att_time)).strftime("%Y-%m-%d %H:%M:%S")
 	check_in.status=status
 	check_in.remark=remark
 	check_in.insert(ignore_permissions=True)
-	check_in.submit()
 	print check_in.name
 	print '-------------------------------------'
 
@@ -109,8 +105,7 @@ def punch_out(att_type,stgid,att_time,userid,auth_token=None):
 	check_in.device_id=stgid
 	check_in.auth_token=auth_token
 	check_in.att_type = att_type
-	check_in.insert(ignore_permissions=True)
+	check_in.save(ignore_permissions=True)
 	print check_in.name
 	print '-----------------------------------'
-	return standard_response()
 
