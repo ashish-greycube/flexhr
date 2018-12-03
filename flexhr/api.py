@@ -6,4 +6,3 @@ def set_as_default(self,method):
         frappe.db.sql("update `tabShift Type` set is_default=0 where name != %s",
         self.name)
 
-   

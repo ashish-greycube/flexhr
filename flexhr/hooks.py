@@ -83,6 +83,8 @@ doc_events = {
 	"Shift Type": {
 		"on_update": "flexhr.api.set_as_default"
 	}
+    
+
 }
 
 # Scheduled Tasks
