@@ -1,0 +1,4 @@
+{
+    "js/flexhr.min.js":
+     [	"public/js/templates/employees_with_leaves_on_payroll_boundary.html" ]
+}

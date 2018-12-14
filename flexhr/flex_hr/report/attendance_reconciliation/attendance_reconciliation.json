@@ -1,0 +1,25 @@
+{
+ "add_total_row": 0, 
+ "color": "orange", 
+ "creation": "2018-12-07 11:50:57.913426", 
+ "disabled": 0, 
+ "docstatus": 0, 
+ "doctype": "Report", 
+ "icon": "octicon octicon-calendar", 
+ "idx": 0, 
+ "is_standard": "Yes", 
+ "modified": "2018-12-07 11:51:31.990053", 
+ "modified_by": "Administrator", 
+ "module": "Flex HR", 
+ "name": "Attendance Reconciliation", 
+ "owner": "Administrator", 
+ "prepared_report": 0, 
+ "ref_doctype": "Employee Checkin", 
+ "report_name": "Attendance Reconciliation ", 
+ "report_type": "Script Report", 
+ "roles": [
+  {
+   "role": "All"
+  }
+ ]
+}

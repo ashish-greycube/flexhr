@@ -16,7 +16,7 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/flexhr/css/flexhr.css"
-# app_include_js = "/assets/flexhr/js/flexhr.js"
+app_include_js = ["/assets/js/flexhr.min.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/flexhr/css/flexhr.css"
@@ -26,7 +26,11 @@ app_license = "MIT"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+	"Employee" : "public/js/employee.js",
+	"Shift Type" : "public/js/shift_type.js",
+	"Payroll Entry" : "public/js/payroll_entry.js"
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -82,7 +86,12 @@ app_license = "MIT"
 doc_events = {
 	"Shift Type": {
 		"on_update": "flexhr.api.set_as_default"
-	}
+	},
+	"Attendance Request": {
+		"before_submit": "flexhr.api.validate_if_attendance_not_applicable",
+		"on_submit":"flexhr.api.copy_fields_to_attendance"
+	},
+	
     
 
 }
