@@ -10,6 +10,36 @@ from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff,
 from frappe.model.document import Document
 
 class AdditionalSalaryEntry(Document):
+	def get_open_attendance_request(self):
+		open_attendance_request=[]
+		open_attendance_request = frappe.db.sql("""select name,employee_name from `tabAttendance Request`
+						where docstatus=0
+						and (from_date between %(salary_start_date)s  and %(salary_end_date)s)
+						and (to_date between %(salary_start_date)s  and %(salary_end_date)s)
+						order by employee_name
+		""",
+		{
+		"salary_start_date":self.start_date,
+		"salary_end_date":self.end_date
+		},as_dict=1)
+		print 'open_attendance_request'
+		print open_attendance_request
+		return open_attendance_request
+
+	def get_open_overtime_application(self):
+		open_overtime_application=[]
+		open_overtime_application = frappe.db.sql("""select name,ot_date as date, employee_name from `tabOvertime Application`
+						where docstatus=0
+						and (ot_date between %(salary_start_date)s  and %(salary_end_date)s)
+						order by employee_name
+		""",
+		{
+		"salary_start_date":self.start_date,
+		"salary_end_date":self.end_date
+		},as_dict=1)
+		print 'open_overtime_application'
+		print open_overtime_application
+		return open_overtime_application
 
 	def on_submit(self):
 		self.create_additional_salary_slips()

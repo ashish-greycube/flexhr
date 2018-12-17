@@ -12,23 +12,25 @@ frappe.ui.form.on('Attendance Processor', {
 			},
 			callback: function(r) {
 			  if (r.message) {
-				  alert(r.message);
+					// frappe.msgprint(r.message);
 			  }
 			}
 		  });
 	},
 	run_manually:function(frm) {
+		if (frm.doc.from_date == null || frm.doc.to_date == null) {
+			frappe.msgprint(__("Date cann't be empty"));
+			return false
+		}
+		frm.set_value('last_run_on', '');
+		frm.set_value('attendance_log', '');
 		return frappe.call({
-			method: "flexhr.flex_hr.attendance_controller.run_job",
-			args: {
-				'start_date': frm.doc.from_date,
-				'end_date':frm.doc.to_date
-			},
-			callback: function(r) {
-			  if (r.message) {
-				  alert(r.message);
-			  }
-			}
+			method: "call_run_job",
+			args: {	},
+			callback: function() {frm.events.refresh(frm);},
+			doc: frm.doc,
+			freeze: true,
+			freeze_message: 'Processing Employee checkin data from Attendance Device...'
 		  });
 	}
 

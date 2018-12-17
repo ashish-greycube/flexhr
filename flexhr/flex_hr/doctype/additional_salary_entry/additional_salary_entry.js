@@ -96,5 +96,75 @@ frappe.ui.form.on('Additional Salary Entry', {
 		frm.clear_table('employees');
 		frm.refresh();
 	},
+	att_req_btn: function(frm){
+		if (frm.doc.start_date == null || frm.doc.end_date == null) {
+			frappe.msgprint(__("Set payroll start and end date before checking open attendance request"));
+			return false
+		}
+
+		if(frm.doc.start_date != null && frm.doc.end_date != null && frm.doc.employees){
+			frappe.call({
+				method: 'get_open_attendance_request',
+				args: {},
+				callback: function(r) {
+					console.log(r)
+					render_attendance_request_html(frm, r.message);
+				},
+				doc: frm.doc,
+				freeze: true,
+				freeze_message: 'Finding Open Attendance Request...'
+			});
+		}else{
+			frm.fields_dict.attendance_request_html.html("");
+		}
+	},
+	overtime_app_btn: function(frm){
+		if (frm.doc.start_date == null || frm.doc.end_date == null) {
+			frappe.msgprint(__("Set payroll start and end date before checking open attendance request"));
+			return false
+		}
+
+		if(frm.doc.start_date != null && frm.doc.end_date != null && frm.doc.employees){
+			frappe.call({
+				method: 'get_open_overtime_application',
+				args: {},
+				callback: function(r) {
+					console.log(r)
+					render_overtime_application_html(frm, r.message);
+				},
+				doc: frm.doc,
+				freeze: true,
+				freeze_message: 'Finding Open Attendance Request...'
+			});
+		}else{
+			frm.fields_dict.overtime_application_html.html("");
+		}
+	}
 
 });
+
+let render_attendance_request_html = function(frm, data) {
+	console.log(data)
+	if (data==null) {
+		frm.fields_dict.overtime_application_html.html("No matching data found");
+	}
+	else{
+	frm.fields_dict.attendance_request_html.html(
+		frappe.render_template('employees_with_open_attendance_request', {
+			data: data
+		})
+	);}
+}
+let render_overtime_application_html = function(frm, data) {
+	console.log(data)
+	if (data==null) {
+		frm.fields_dict.overtime_application_html.html("No matching data found");
+	}
+	else{
+	frm.fields_dict.overtime_application_html.html(
+		frappe.render_template('employees_with_open_overtime_application', {
+			data: data
+		})
+	);
+	}
+}

@@ -29,7 +29,8 @@ app_include_js = ["/assets/js/flexhr.min.js"]
 doctype_js = {
 	"Employee" : "public/js/employee.js",
 	"Shift Type" : "public/js/shift_type.js",
-	"Payroll Entry" : "public/js/payroll_entry.js"
+	"Payroll Entry" : "public/js/payroll_entry.js",
+	"Leave Application" : "public/js/leave_application.js"
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -99,23 +100,23 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"flexhr.tasks.all"
-# 	],
-# 	"daily": [
-# 		"flexhr.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"flexhr.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"flexhr.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"flexhr.tasks.monthly"
-# 	]
-# }
+scheduler_events = {
+	# "all": [
+	# 	"flexhr.tasks.all"
+	# ],
+	"daily_long": [
+		"flexhr.flex_hr.attendance_controller.run_nighlty_job"
+	],
+	# "hourly": [
+	# 	"flexhr.tasks.hourly"
+	# ],
+	# "weekly": [
+	# 	"flexhr.tasks.weekly"
+	# ]
+	# "monthly": [
+	# 	"flexhr.tasks.monthly"
+	# ]
+}
 
 # Testing
 # -------

@@ -61,3 +61,26 @@ def validate_if_holiday_or_leave(self,attendance_date) :
                 frappe.throw(_("Attendance not submitted for half day. Instead put half day leave on {0}").format(attendance_date))
                 return False
         return True
+
+@frappe.whitelist()
+def is_holiday_on_half_date(employee, leave_type,half_day_date):
+        if not frappe.db.get_value("Leave Type", leave_type, "include_holiday"):
+                if is_holiday(employee,half_day_date):
+                        return True
+        else:
+                return False
+
+
+def get_number_of_leave_days(employee, leave_type, from_date, to_date, half_day = None, half_day_date = None):
+	number_of_days = 0
+	if cint(half_day) == 1:
+		if from_date == to_date:
+			number_of_days = 0.5
+		else:
+			number_of_days = date_diff(to_date, from_date) + .5
+	else:
+		number_of_days = date_diff(to_date, from_date) + 1
+
+	if not frappe.db.get_value("Leave Type", leave_type, "include_holiday"):
+		number_of_days = flt(number_of_days) - flt(get_holidays(employee, from_date, to_date))
+	return number_of_days

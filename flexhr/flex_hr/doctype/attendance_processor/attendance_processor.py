@@ -6,9 +6,15 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 from frappe import _
+from flexhr.flex_hr.attendance_controller import run_job
+from frappe.utils import parse_val
 
 class AttendanceProcessor(Document):
-	pass
+	
+	@frappe.whitelist()
+	def call_run_job(self):
+		run_job(self.from_date,self.to_date)
+		return
 
 @frappe.whitelist()
 def precondition_for_auto_attendance():
@@ -29,9 +35,10 @@ def precondition_for_auto_attendance():
 	attendance_user_id=frappe.db.sql("""select employee_name from `tabEmployee`  
 						where attendance_user_id is null
 						and docstatus<2
-						and status!='Left'""")
+						and status!='Left'""",as_list=1)
 	if attendance_user_id:
-		frappe.throw(_('Please set Attendance Device User ID for Employees {0}').format(attendance_user_id))
+		frappe.throw(_('Please set Attendance Device User ID for Employees {0}').format(parse_val(attendance_user_id)))
+	
 	# user_id should be present for sending emails
 
 	#HR settings email template
@@ -53,10 +60,9 @@ def precondition_for_auto_attendance():
 		ignore_ealry_out,
 		min_overtime_required,
 		max_overtime_allowed
-		from `tabShift Type` where is_default=1 and docstatus<2'""")
+		from `tabShift Type` where is_default=1 and docstatus<2""",as_dict=1)
 	if shift_detail:
 		frappe.msgprint(_('Please check shift_detail {0}').format(shift_detail[0]))	
 
-	return 'All pre-check condition passed'
-
+	return frappe.msgprint(_('All pre-check condition passed'))	
 
