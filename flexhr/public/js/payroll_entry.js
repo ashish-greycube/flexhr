@@ -35,16 +35,16 @@ frappe.ui.form.on('Payroll Entry', {
 let render_employee_leave = function (frm, data) {
 	console.log('data')
 	console.log(data)
-	if(data)
-	{
-		console.log('data11')
-		// frm.set_df_property("split_leaves", "hidden", 1);
+
+	if (data==null) {
+		frm.fields_dict.leave_detail_html.html("No matching data found");
 	}
+	else{
 	console.log(frm)
 	console.log(data)
 	frm.fields_dict.leave_detail_html.html(
 		frappe.render_template('employees_with_leaves_on_payroll_boundary', {
 			data: data
 		})
-	);
+	);}
 }

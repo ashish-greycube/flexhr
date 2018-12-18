@@ -4,7 +4,7 @@ from frappe import _
 from werkzeug.wrappers import Response
 import datetime
 from erpnext.hr.doctype.employee.employee import is_holiday
-from erpnext.hr.doctype.leave_application.leave_application import get_number_of_leave_days
+from erpnext.hr.doctype.leave_application.leave_application import get_number_of_leave_days,get_leave_approver
 from frappe.utils import get_url_to_form,formatdate,split_emails
 from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff, money_in_words,time_diff_in_seconds,today,now_datetime
 
@@ -87,8 +87,14 @@ def create_attendance(emp,dt,emp_in_time,emp_out_time,duration,shift_start_time,
 				employee_attendance.department = employee_doc.department
 				employee_attendance.status = status
 				employee_attendance.attendance_date = dt
-				employee_attendance.checkin_time=emp_in_time
-				employee_attendance.checkout_time=emp_out_time
+				if emp_in_time==None:
+					employee_attendance.checkin_time=""
+				else:
+					employee_attendance.checkin_time=emp_in_time
+				if emp_out_time==None:
+					employee_attendance.checkout_time=""
+				else:
+					employee_attendance.checkout_time=emp_out_time
 				employee_attendance.duration=duration
 				employee_attendance.shift_in_time=shift_start_time
 				employee_attendance.shift_out_time=shift_end_time
@@ -124,9 +130,18 @@ def create_attendance_request(emp_id,date,emp_in_time,emp_out_time,duration,shif
 		att_req.to_date=date
 		att_req.reason='On Duty'
 		att_req.explanation=explanation
-		att_req.checkin_time=emp_in_time
-		att_req.checkout_time=emp_out_time
-		att_req.duration=duration
+		if emp_in_time==None:
+			att_req.checkin_time=""
+		else:
+			att_req.checkin_time=emp_in_time
+		if emp_out_time==None:
+			att_req.checkout_time=""
+		else:
+			att_req.checkout_time=emp_out_time
+		if duration==None:
+			att_req.duration=""
+		else:
+			att_req.duration=duration
 		att_req.shift_in_time=shift_start_time
 		att_req.shift_out_time=shift_end_time
 		att_req.shift_type=shift_type
@@ -327,7 +342,6 @@ def get_draft_leave_of_employee(employee_name,date,docstatus=0):
 	""", {
 		"date": date,
 		"employee_name": employee_name,
-		"status": status,
 		"docstatus": docstatus
 	}, as_dict=1)
 	return leave_detail[0] if bool(leave_detail) else None
@@ -349,8 +363,7 @@ and (from_date between %(date)s and %(date)s or to_date between %(date)s and %(d
 def validate_dates(start_date,end_date):
 	if start_date and end_date and (getdate(end_date) < getdate(start_date)):
 			frappe.throw(_("To date cannot be before from date"))
-
-	if end_date>today() or start_date>today():
+	if end_date>getdate(today()) or start_date>getdate(today()):
 		frappe.throw(_("Cann't run for future dates"))
 
 def validate_salary_processed_days(start_date,end_date):
@@ -396,6 +409,8 @@ def run_job(start_date,end_date):
 		att_log = frappe.new_doc("Attendance Log")
 		print att_log.name
 		att_log.run_on = frappe.utils.now()
+		att_log.from_date=start_date
+		att_log.to_date=end_date
 		validate_dates(start_date,end_date)
 		validate_salary_processed_days(start_date,end_date)
 		validate_employee_checkin_status(start_date,end_date)
@@ -438,13 +453,20 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 	for d in range(checkin_days):
 		dt = add_days(cstr(getdate(start_date)), d)
 
-		is_cmp_holiday=is_company_holiday(dt)
-		if is_cmp_holiday==False:
-		# stop processing if less than 50% of attendance is present in device on a working day.	
-			emp_wo_att_count=emp_wo_attendance(dt)
-			per_of_emp_present=(flt(emp_wo_att_count)/flt(total_emp_count))*100
-			if (per_of_emp_present)<50:
-				frappe.throw(_("Device has missing data for {0} % of employee and hence cann't run").format(per_of_emp_present))	
+		if cint(frappe.db.get_value("Attendance Processor", None, "override_absent_check"))==0:
+			is_cmp_holiday=is_company_holiday(dt)
+			if is_cmp_holiday==False:
+			# stop processing if less than 50% of attendance is present in device on a working day.	
+				emp_wo_att_count=emp_wo_attendance(dt)
+				per_of_emp_absent=(flt(emp_wo_att_count)/flt(total_emp_count))*100
+				print 'emp_wo_att_count'
+				print emp_wo_att_count
+				print 'total_emp_count'
+				print total_emp_count
+				print 'per_of_emp_present'
+				print per_of_emp_absent
+				if (per_of_emp_absent)>50:
+					frappe.throw(_("{0} is working day. Device has missing data for {1} % of employee and hence cann't run. Total Employee are {2}. Absent Employee are {3}").format(dt,per_of_emp_absent,total_emp_count,emp_wo_att_count))	
 
 		# fetch all employee device data for particular date
 		check_in=get_all_employee_checkin_detail(dt)
@@ -481,7 +503,7 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 
 				if holiday==True:
 					# Holiday so do nothing
-					remark=_('Holiday.'+dt +'So, no processing')
+					remark=_('Holiday. '+dt +' So, no processing')
 				else:
 					#It is working day
 					present_status=None
@@ -495,7 +517,7 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 						shift_type=shift['shift_type']
 						shift_start_time=shift['start_time']
 						shift_end_time=shift['end_time']
-						duration=0
+						duration=''
 						status='Present'
 						late_checkin_mins=0
 						early_checkout_mins=0
@@ -503,7 +525,7 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 						if emp_in_time and emp_out_time:
 							duration = emp_out_time - emp_in_time
 						else:
-							duration=0
+							duration=''
 						#conditions
 						ignore_late_checkin_deduction=emp['ignore_late_checkin_deduction']
 						ignore_early_checkout_deduction=emp['ignore_early_checkout_deduction']
@@ -542,9 +564,13 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 
 					if leave_detail!=None:
 					# Leave is there
+						print 'half-day'
+						print half_day_date
+						print getdate(dt)
+						print getdate(half_day_date)
 						if half_day_date!=None and getdate(dt)==getdate(half_day_date):
 							#There is leave with half day and it matches current date
-							remark=_('Half-day '+leave_name+ 'on '+ half_day_date+ ' So, no processing')
+							remark=_('Half-day '+leave_name+ ' on '+ str(half_day_date)+ ' So, no processing')
 						else:
 							#It is leave with full day
 							if present_status=='absent':
@@ -555,7 +581,7 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 								att_req=attendance_request_exist(emp_id,dt,0)
 								if att_req:
 									# It is re-run
-									remark=_('Re-run. Emp is'+present_status+' present. AR '+att_req +' exist for '+leave_name)
+									remark=_('Re-run. Emp is '+present_status+' present. AR: '+att_req +' exist for '+leave_name)
 								else:
 									explanation='Once '+leave_name+' is cancelled. You may submit it.'
 									att_req=create_attendance_request(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,explanation)
@@ -612,16 +638,17 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 								review_count +=1
 								admin_review_count +=1
 						elif present_status=='full':
-							if att_detail!=None :
+							if att_detail==None :
 								# there is no existing attendance
 								att_name=create_attendance(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,status=status)
 								remark=_('Attendance with status Present is created '+att_name)
 							else:
-								remark=_('Re-run. Existing attendance '+att_name+ ' status'+att_status)
+								remark=_('Re-run. Existing attendance '+str(att_name)+ ' status '+str(att_status))
 						elif present_status=='partial':
-							if att_req:
-								remark=_('Re-run. AR '+att_req+ ' exist for partial presence')
-							else:
+							att_req=attendance_request_exist(emp_id,dt,0)
+							if att_req!=None:
+								remark=_('Re-run. AR '+str(att_req)+ ' exist for partial presence')
+							elif att_req==None :
 								description =present_status+' presence on '+dt+' In: '+str(emp_in_time)+' and Out: '+str(emp_out_time)+ '\n system created LWP'
 								# before LWP , check for any leave for same date in draft state
 								draft_leave=get_draft_leave_of_employee(emp_name,dt,docstatus=0)
@@ -633,7 +660,7 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 									frappe.delete_doc('Leave Application',draft_leave_name)
 								if att_detail==None:
 									leave_name=create_lwp(emp_id,dt,description)
-									explanation='Employee  is'+present_status+' present, hence system created LWP '+leave_name+'.Once it is cancelled, you may submit this request'
+									explanation='Employee  is '+present_status+' present, hence system created LWP '+leave_name+'.Once it is cancelled, you may submit this request'
 									att_req=create_attendance_request(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,explanation)
 									# email inform
 									leave_url=get_url_to_form("Leave Application",leave_name)
@@ -646,6 +673,7 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 											"leave_url":leave_url
 										}
 									notify_employee(emp_id,args)
+									leave_approver=get_leave_approver(emp_id)
 									if leave_approver:
 										attendance_request_remark='Employee, is partial present. So use your judgement. Honour system created LWP OR cancel LWP and submit '+ar_url+ ' for Overtime/Penalty calculation'
 										args["attendance_request_remark"]=attendance_request_remark
@@ -662,8 +690,14 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 									review_count +=1
 									admin_review_count +=1
 				print emp_name
+				print 'emp_in_time'
 				print emp_in_time
+				print 'emp_out_time'
 				print emp_out_time
+				if emp_in_time == None:
+					emp_in_time=""
+				if emp_out_time == None:
+					emp_out_time=""				
 				att_log_entry={
 				'emp':emp_name,
 				'date':dt,
@@ -697,7 +731,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 				leave_name=None
 				att_req=None
 				remark=None
-				action=None
 				review=None
 				reviewer=None
 				att_log_entry={}

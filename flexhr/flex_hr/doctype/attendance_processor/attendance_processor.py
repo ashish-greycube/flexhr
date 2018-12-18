@@ -8,12 +8,14 @@ from frappe.model.document import Document
 from frappe import _
 from flexhr.flex_hr.attendance_controller import run_job
 from frappe.utils import parse_val
+import json
+from frappe.utils import getdate
 
 class AttendanceProcessor(Document):
 	
 	@frappe.whitelist()
 	def call_run_job(self):
-		run_job(self.from_date,self.to_date)
+		run_job(getdate(self.from_date),getdate(self.to_date))
 		return
 
 @frappe.whitelist()
@@ -37,7 +39,8 @@ def precondition_for_auto_attendance():
 						and docstatus<2
 						and status!='Left'""",as_list=1)
 	if attendance_user_id:
-		frappe.throw(_('Please set Attendance Device User ID for Employees {0}').format(parse_val(attendance_user_id)))
+		msg=_('Please set Attendance Device User ID for Employees')+' '+", ".join(attendance_user_id[0] or [])
+		# frappe.throw(msg)
 	
 	# user_id should be present for sending emails
 
@@ -52,7 +55,7 @@ def precondition_for_auto_attendance():
 
 	#Default shift with details
 	shift_detail=frappe.db.sql("""select 
-		working_hours,
+		DATE_FORMAT(working_hours,'%H:%I:%S') as working_hours,
 		late_checkin_penalty_based_on,
 		late_checkin_deduction_based_on,
 		ignore_late_in,
@@ -62,7 +65,7 @@ def precondition_for_auto_attendance():
 		max_overtime_allowed
 		from `tabShift Type` where is_default=1 and docstatus<2""",as_dict=1)
 	if shift_detail:
-		frappe.msgprint(_('Please check shift_detail {0}').format(shift_detail[0]))	
+		frappe.msgprint(_('Please check shift_detail {0}').format(json.dumps(shift_detail[0], indent=10, sort_keys=False)))	
 
 	return frappe.msgprint(_('All pre-check condition passed'))	
 

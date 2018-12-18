@@ -18,6 +18,12 @@ def validate_if_attendance_not_applicable(self,method):
 
 
 def copy_fields_to_attendance(self,method):
+        if self.checkin_time==None:
+                self.checkin_time=""
+        if self.checkout_time==None:
+                self.checkout_time=""
+        if self.duration==None:
+                self.duration=""
         frappe.db.sql("""update `tabAttendance` set  
         checkin_time=%s,
         checkout_time=%s,

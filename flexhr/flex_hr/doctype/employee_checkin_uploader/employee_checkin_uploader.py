@@ -26,6 +26,10 @@ class EmployeeCheckinUploader(Document):
 				remark = 'Inserted by Data Import'
 				auth_token=frappe.db.get_single_value("Attendance Device Settings", "auth_token")
 				stgid=None
+				if (self.out_time and self.in_time) and(self.out_time <= self.in_time):
+					frappe.throw(_("Out Time Should Be Greater Than In Time"))	
+
+
 				if self.in_time and self.attendance_user_id and self.att_date:
 					att_type='in'
 					att_time=self.in_time
