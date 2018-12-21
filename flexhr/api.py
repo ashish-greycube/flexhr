@@ -4,26 +4,21 @@ from frappe import _
 from frappe.utils import date_diff, add_days, getdate
 from erpnext.hr.doctype.employee.employee import is_holiday
 
+# Shift Type - functions
 def set_as_default(self,method):
     if self.is_default:
         frappe.db.sql("update `tabShift Type` set is_default=0 where name != %s",
         self.name)
 
-
-def validate_if_attendance_not_applicable(self,method):
+# Attendance Request - functions
+def validate_if_attendance_not_applicable_for_att_req(self,method):
         request_days = date_diff(self.to_date, self.from_date) + 1
         for number in range(request_days):
                 attendance_date = add_days(self.from_date, number)
                 skip_attendance = validate_if_holiday_or_leave(self,attendance_date)
 
 
-def copy_fields_to_attendance(self,method):
-        if self.checkin_time==None:
-                self.checkin_time=""
-        if self.checkout_time==None:
-                self.checkout_time=""
-        if self.duration==None:
-                self.duration=""
+def copy_fields_from_att_req_to_att(self,method):
         frappe.db.sql("""update `tabAttendance` set  
         checkin_time=%s,
         checkout_time=%s,
@@ -47,6 +42,12 @@ def copy_fields_to_attendance(self,method):
 	self.overtime,
         self.name))
 
+def stop_delete_of_att_req(self,method):
+        #frappe.throw(_("Cannot delete Attendance Request. Valid actions are submit or cancel"))
+        pass
+
+# Helper functions
+
 def validate_if_holiday_or_leave(self,attendance_date) :
         # Check if attendance_date is a Holiday
         if is_holiday(self.employee, attendance_date):
@@ -67,6 +68,10 @@ def validate_if_holiday_or_leave(self,attendance_date) :
                 frappe.throw(_("Attendance not submitted for half day. Instead put half day leave on {0}").format(attendance_date))
                 return False
         return True
+
+
+
+####
 
 @frappe.whitelist()
 def is_holiday_on_half_date(employee, leave_type,half_day_date):

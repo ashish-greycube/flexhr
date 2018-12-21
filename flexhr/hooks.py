@@ -30,7 +30,8 @@ doctype_js = {
 	"Employee" : "public/js/employee.js",
 	"Shift Type" : "public/js/shift_type.js",
 	"Payroll Entry" : "public/js/payroll_entry.js",
-	"Leave Application" : "public/js/leave_application.js"
+	"Leave Application" : "public/js/leave_application.js",
+	"Attendance" : "public/js/attendance.js"
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -89,8 +90,9 @@ doc_events = {
 		"on_update": "flexhr.api.set_as_default"
 	},
 	"Attendance Request": {
-		"before_submit": "flexhr.api.validate_if_attendance_not_applicable",
-		"on_submit":"flexhr.api.copy_fields_to_attendance"
+		"before_submit": "flexhr.api.validate_if_attendance_not_applicable_for_att_req",
+		"on_submit":"flexhr.api.copy_fields_from_att_req_to_att",
+		"on_trash":"flexhr.api.stop_delete_of_att_req"
 	},
 	
     

@@ -40,7 +40,7 @@ def precondition_for_auto_attendance():
 						and status!='Left'""",as_list=1)
 	if attendance_user_id:
 		msg=_('Please set Attendance Device User ID for Employees')+' '+", ".join(attendance_user_id[0] or [])
-		# frappe.throw(msg)
+		frappe.throw(msg)
 	
 	# user_id should be present for sending emails
 

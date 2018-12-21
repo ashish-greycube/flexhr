@@ -28,10 +28,6 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Employee Checkin",
-				},
-				{
-					"type": "doctype",
-					"name": "Employee Checkin Uploader",
 				}
 			]
 		},
@@ -64,6 +60,10 @@ def get_data():
         		{
 			"label": _("Attendance Setup"),
 			"items": [
+								{
+					"type": "doctype",
+					"name": "Attendance Device Settings",
+				},
                 {
 					"type": "doctype",
 					"name": "Shift Type",
@@ -76,10 +76,7 @@ def get_data():
 					"type": "doctype",
 					"name": "HR Settings",
 				},
-				{
-					"type": "doctype",
-					"name": "Attendance Device Settings",
-				},
+
                 {
 					"type": "doctype",
 					"name": "Holiday List",
@@ -110,5 +107,15 @@ def get_data():
 				}
 			]
 		},
+
+		{
+			"label": _("Device Down"),
+			"items": [
+				{
+					"type": "doctype",
+					"name": "Employee Checkin Uploader",
+				}
+			]
+		}
 	
 	]

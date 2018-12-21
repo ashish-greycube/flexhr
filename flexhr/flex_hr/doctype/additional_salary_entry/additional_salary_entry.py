@@ -8,8 +8,15 @@ import datetime
 from frappe import _
 from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff, money_in_words, getdate
 from frappe.model.document import Document
+from erpnext.hr.doctype.payroll_entry.payroll_entry import get_start_end_dates
+from flexhr.flex_hr.attendance_controller import get_shift_detail_of_employee
 
 class AdditionalSalaryEntry(Document):
+	def validate(self):
+		if self.start_date <= self.posting_date  <= self.end_date:
+			pass
+		else:
+			frappe.throw(_('Posting date {0} should be between {1} and {2}').format(self.posting_date,self.start_date,self.end_date))
 	def get_open_attendance_request(self):
 		open_attendance_request=[]
 		open_attendance_request = frappe.db.sql("""select name,employee_name from `tabAttendance Request`
@@ -22,8 +29,6 @@ class AdditionalSalaryEntry(Document):
 		"salary_start_date":self.start_date,
 		"salary_end_date":self.end_date
 		},as_dict=1)
-		print 'open_attendance_request'
-		print open_attendance_request
 		return open_attendance_request
 
 	def get_open_overtime_application(self):
@@ -37,8 +42,6 @@ class AdditionalSalaryEntry(Document):
 		"salary_start_date":self.start_date,
 		"salary_end_date":self.end_date
 		},as_dict=1)
-		print 'open_overtime_application'
-		print open_overtime_application
 		return open_overtime_application
 
 	def on_submit(self):
@@ -75,47 +78,80 @@ class AdditionalSalaryEntry(Document):
 		cond = self.get_filter_condition()
 		cond += self.get_joining_releiving_condition()
 
-		condition = 'order by modified desc LIMIT 1'
-	
+		#condition = 'order by modified desc LIMIT 1'
+		condition = ''
+		if self.payroll_frequency:
+			condition = """and SS.payroll_frequency = '%(payroll_frequency)s'"""% {"payroll_frequency": self.payroll_frequency}
+		print 'inside get_emp_list'
+		# is_included_for_delay_and_overtime flag check at child table i.e. salary detail level
+		# sal_struct = frappe.db.sql_list("""
+		# 		select distinct(SS.name)  from `tabSalary Structure` SS
+		# 			inner join `tabSalary Detail` SD
+		# 			on SS.name=SD.parent
+		# 		where
+		# 			SD.parenttype='Salary Structure'
+		# 			and SD.is_included_for_delay_and_overtime=1
+		# 			and SS.docstatus = 1
+		# 			and SS.is_active = 'Yes'
+		# 			and SS.company = %(company)s 
+		# 			{condition}""".format(condition=condition),
+		# 		{"company": self.company})
+
+		# is_included_for_delay_and_overtime flag check at component level
 		sal_struct = frappe.db.sql_list("""
-				select
-					name from `tabSalary Structure`
-				where
-					docstatus = 1 and
-					is_active = 'Yes'
-					and company = %(company)s 
+				select distinct(SS.name)  from `tabSalary Structure` SS
+					inner join `tabSalary Detail` SD
+						on SS.name=SD.parent
+					inner join `tabSalary Component` SC
+						on SD.salary_component=SC.name
+					where
+						SD.parenttype='Salary Structure'
+						and SC.is_included_for_delay_and_overtime=1
+						and SS.docstatus = 1
+						and SS.is_active = 'Yes'
+						and SS.company = %(company)s 
 					{condition}""".format(condition=condition),
 				{"company": self.company})
+		print sal_struct
 		if sal_struct:
-			cond += "and t2.salary_structure IN %(sal_struct)s "
-			cond += "and %(from_date)s >= t2.from_date"
-			emp_list = frappe.db.sql("""
-				select
-					t1.name as employee, t1.employee_name, t1.department, t1.designation,
-					t2.salary_structure,t2.base
-				from
-					`tabEmployee` t1, `tabSalary Structure Assignment` t2
-				where
-					t1.name = t2.employee
-					and t2.docstatus = 1
-			%s order by t2.from_date desc 
+
+			# cond += "and t2.salary_structure IN %(sal_struct)s "
+			# cond += "and %(from_date)s >= t2.from_date"
+			# #original multiple ss
+			# emp_list = frappe.db.sql("""
+			# 	select
+			# 		t1.name as employee, t1.employee_name, t1.department, t1.designation,
+			# 		t2.salary_structure,t2.base
+			# 	from
+			# 		`tabEmployee` t1, `tabSalary Structure Assignment` t2
+			# 	where
+			# 		t1.name = t2.employee
+			# 		and t2.docstatus = 1
+			# %s order by t2.from_date desc
 			
-			""" % cond, {"sal_struct": tuple(sal_struct), "from_date": self.end_date}, as_dict=True)
+			# """ % cond, {"sal_struct": tuple(sal_struct), "from_date": self.end_date}, as_dict=True)
+
+			
+			# single ss only
+			cond += "and t2.salary_structure IN %(sal_struct)s "
+			cond += "and %(from_date)s >= t2.from_date and not exists (	select 1 from `tabSalary Structure Assignment` t3 where t3.name <> t2.name	and t3.employee = t2.employee and t3.from_date > t2.from_date and   %(from_date)s >=t3.from_date )	order by t2.from_date desc"
+			
+			emp_list = frappe.db.sql("""
+				select t1.name as employee, t1.employee_name, t1.department, t1.designation,
+					t2.salary_structure, t2.base
+				from  `tabEmployee` t1,`tabSalary Structure Assignment` t2
+    			where 
+					t2.docstatus = 1    
+    				and t1.name = t2.employee
+					%s
+			""" % cond, {"sal_struct": tuple(sal_struct), "from_date": self.end_date}, as_dict=True)	
 			print 'emp_list'
-			print cond
-			print sal_struct
-			print self.end_date
 			print emp_list
 			return emp_list
 
-
-
 	def create_additional_salary_slips(self):
-		print 'create'
-		print self
 		for d in self.employees:
 			if d.irregular_checkin_checkout_deduction>0:
-				print 'delay_amount'
 				ad_sal = frappe.new_doc("Additional Salary")
 				ad_sal.employee=d.employee
 				ad_sal.salary_component='Delay Penalty'
@@ -125,7 +161,6 @@ class AdditionalSalaryEntry(Document):
 				ad_sal.save()
 				ad_sal.submit()
 			if d.overtime_earning>0:
-				print 'overtime_earning'
 				ad_sal = frappe.new_doc("Additional Salary")
 				ad_sal.employee=d.employee
 				ad_sal.salary_component='Overtime'
@@ -143,17 +178,10 @@ class AdditionalSalaryEntry(Document):
 			frappe.throw(_("No employees for the mentioned criteria"))
 		for d in employees:
 			result= get_attendance_details(d.employee,self.start_date,self.end_date)
-			print result
-			# get all submitted overtime application
 			if result != None:
-				result=get_overtime_application_details(d.employee,self.start_date,self.end_date)
-				print result
-
-			delay_amount,ot_amount=calculate_component_amounts(d.employee,self.company,d.salary_structure,d.base,result.late_checkin,result.early_checkout,result.overtime)
-			# ear=frappe.get_doc('Salary Structure', d.salary_structure)
-		#	print ear.get("earnings")[0]
-			# print comp
-			if result != None:
+				delay_amount,ot_amount=calculate_component_amounts(d.employee,self.company,d.salary_structure,d.base,result.late_checkin,result.early_checkout,result.overtime,self.start_date)
+				print 'attendance'
+				print d.employee,d.salary_structure
 				ans={
 					'employee':d.employee,
 					'late_checkin':result.late_checkin,
@@ -162,19 +190,26 @@ class AdditionalSalaryEntry(Document):
 					'overtime':result.overtime,
 					'overtime_earning':ot_amount
 				}
-				# print d.employee
-				# ans.update({'employee',d.employee})
-				# ans.update({'late_checkin',result.late_checkin})
-				# ans.update({'early_checkout',result.early_checkout})
-				# ans.update({'irregular_checkin_checkout_deduction',delay_amount})
-				# ans.update({'overtime',result.overtime})
-				# ans.update({'overtime_earning',ot_amount})
-				
-				# ans1=Merge(d.employee+result.late_checkin+result.early_checkout)
-				print ans
-			 	# d.append(result)
-			self.append('employees',ans)
-			# print d
+				self.append('employees',ans)
+
+
+			## overtime application calculation
+		for d in employees:
+			result=get_overtime_application_details(d.employee,self.start_date,self.end_date)
+			if result != None:
+				delay_amount,ot_amount=calculate_component_amounts(d.employee,self.company,d.salary_structure,d.base,result.late_checkin,result.early_checkout,result.overtime,self.start_date)
+			if result != None:
+				print 'OT application'
+				print d.employee,d.salary_structure
+				ans={
+					'employee':d.employee,
+					'late_checkin':result.late_checkin,
+					'early_checkout':result.early_checkout,
+					'irregular_checkin_checkout_deduction':delay_amount,
+					'overtime':result.overtime,
+					'overtime_earning':ot_amount
+				}
+				self.append('employees',ans)
 
 
 		self.number_of_employees = len(employees)
@@ -183,8 +218,6 @@ def get_data_for_eval(employee,salary_structure):
 	'''Returns data for evaluating formula'''
 	data = frappe._dict()
 	_salary_structure_doc = frappe.get_doc('Salary Structure', salary_structure)
-	# data.update(frappe.get_doc("Salary Structure Employee",
-		# {"employee": employee, "parent": salary_structure}).as_dict())
 
 	data.update(frappe.get_doc("Employee", employee).as_dict())
 	data.update(_salary_structure_doc.as_dict())
@@ -200,22 +233,20 @@ def get_data_for_eval(employee,salary_structure):
 
 	return data
 
-def calculate_component_amounts(employee,company,salary_structure,base,late_checkin,early_checkout,overtime):
+def calculate_component_amounts(employee,company,salary_structure,base,late_checkin,early_checkout,overtime,salary_start_date):
 		_salary_structure_doc = frappe.get_doc('Salary Structure', salary_structure)
 		data = get_data_for_eval(employee,salary_structure)
-		# print data
 		total_amt=0
 		for key in ('earnings', 'deductions'):
 			for struct_row in _salary_structure_doc.get(key):
 				amount = eval_condition_and_formula(struct_row, base,data)
-				print 'each'
-				print amount
 				total_amt=amount+total_amt
 				
 		per_minute_amount_for_additional_salary_based_on = frappe.db.get_value("Company", company, "per_minute_amount_for_additional_salary_based_on")
 		if per_minute_amount_for_additional_salary_based_on=='Fixed Days':
 			no_of_fixed_days=frappe.db.get_value("Company", company, "no_of_fixed_days")
-		per_min=total_amt/cint(no_of_fixed_days)/8/60
+		working_hours=get_shift_detail_of_employee(employee,salary_start_date)['working_hours']
+		per_min=total_amt/cint(no_of_fixed_days)/flt(working_hours)/60
 		total_delay_min=late_checkin+early_checkout
 		delay_amount=per_min*total_delay_min
 		ot_factor = frappe.db.get_value("Company", company, "overtime_earning_factor")
@@ -234,13 +265,7 @@ approved_ot_mins >0 and
 docstatus=1 and
 employee = %s and
 ot_date between %s and %s""", (employee,start_date, end_date), as_dict=True)
-	print 'OT'
-	print employee
-	print start_date
-	print end_date
-	print att_list
-	return att_list[0] if att_list else None
-
+	return att_list[0] if att_list[0]['overtime']>0 else None
 
 def get_attendance_details(employee,start_date,end_date):
 	att_list = frappe.db.sql("""select 
@@ -251,8 +276,9 @@ from `tabAttendance`
 where
 employee = %s
 and status='Present'
+and docstatus=1
 and date(attendance_date) between %s and %s""", (employee,start_date, end_date), as_dict=True)
-	return att_list[0] if att_list else None
+	return att_list[0] if (att_list[0]['late_checkin']>0 or att_list[0]['early_checkout']>0 or att_list[0]['overtime']>0) else None
 
 def eval_condition_and_formula(d,base, data):
 	whitelisted_globals = {

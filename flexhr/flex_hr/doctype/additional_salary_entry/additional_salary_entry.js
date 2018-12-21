@@ -81,11 +81,44 @@ frappe.ui.form.on('Additional Salary Entry', {
 	branch: function (frm) {
 		frm.events.clear_employee_table(frm);
 	},
-
+	set_end_date: function(frm){
+		frappe.call({
+			method: 'erpnext.hr.doctype.payroll_entry.payroll_entry.get_end_date',
+			args: {
+				frequency: frm.doc.payroll_frequency,
+				start_date: frm.doc.start_date
+			},
+			callback: function (r) {
+				if (r.message) {
+					frm.set_value('end_date', r.message.end_date);
+				}
+			}
+		});
+	},
 	start_date: function (frm) {
 		if(!in_progress && frm.doc.start_date){
-			frm.set_value('end_date', frappe.datetime.add_days(frm.doc.start_date, 30));
-			frm.set_value('posting_date', frappe.datetime.add_days(frm.doc.start_date, 5));
+			if (!frm.doc.payroll_frequency){
+				frm.set_value('payroll_frequency', 'Monthly');
+			}
+			if (frm.doc.payroll_frequency){
+				if (frm.doc.payroll_frequency =='Daily'){
+				frm.set_value('posting_date', frappe.datetime.add_days(frm.doc.start_date, 0));
+
+				}
+				else if (frm.doc.payroll_frequency =='Weekly'){
+					frm.set_value('posting_date', frappe.datetime.add_days(frm.doc.start_date, 1));
+
+				}
+				else{
+					frm.set_value('posting_date', frappe.datetime.add_days(frm.doc.start_date, 5));
+
+				}
+
+			}
+			
+			frm.trigger("set_end_date");
+			// frm.set_value('end_date', frappe.datetime.add_days(frm.doc.start_date, 30));
+
 		}else{
 			// reset flag
 			in_progress = false;
@@ -118,9 +151,30 @@ frappe.ui.form.on('Additional Salary Entry', {
 			frm.fields_dict.attendance_request_html.html("");
 		}
 	},
+	payroll_frequency: function (frm) {
+		if(frm.doc.start_date){
+		frm.trigger("set_end_date");
+		frm.events.clear_employee_table(frm);
+		if (frm.doc.payroll_frequency){
+			if (frm.doc.payroll_frequency =='Daily'){
+			frm.set_value('posting_date', frappe.datetime.add_days(frm.doc.start_date, 0));
+
+			}
+			else if (frm.doc.payroll_frequency =='Weekly'){
+				frm.set_value('posting_date', frappe.datetime.add_days(frm.doc.start_date, 1));
+
+			}
+			else{
+				frm.set_value('posting_date', frappe.datetime.add_days(frm.doc.start_date, 5));
+
+			}
+
+		}
+		}
+	},
 	overtime_app_btn: function(frm){
 		if (frm.doc.start_date == null || frm.doc.end_date == null) {
-			frappe.msgprint(__("Set payroll start and end date before checking open attendance request"));
+			frappe.msgprint(__("Set payroll start and end date before checking open overtime application"));
 			return false
 		}
 
