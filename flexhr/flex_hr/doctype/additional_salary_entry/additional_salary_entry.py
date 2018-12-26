@@ -84,34 +84,34 @@ class AdditionalSalaryEntry(Document):
 			condition = """and SS.payroll_frequency = '%(payroll_frequency)s'"""% {"payroll_frequency": self.payroll_frequency}
 		print 'inside get_emp_list'
 		# is_included_for_delay_and_overtime flag check at child table i.e. salary detail level
-		# sal_struct = frappe.db.sql_list("""
-		# 		select distinct(SS.name)  from `tabSalary Structure` SS
-		# 			inner join `tabSalary Detail` SD
-		# 			on SS.name=SD.parent
-		# 		where
-		# 			SD.parenttype='Salary Structure'
-		# 			and SD.is_included_for_delay_and_overtime=1
-		# 			and SS.docstatus = 1
-		# 			and SS.is_active = 'Yes'
-		# 			and SS.company = %(company)s 
-		# 			{condition}""".format(condition=condition),
-		# 		{"company": self.company})
-
-		# is_included_for_delay_and_overtime flag check at component level
 		sal_struct = frappe.db.sql_list("""
 				select distinct(SS.name)  from `tabSalary Structure` SS
 					inner join `tabSalary Detail` SD
-						on SS.name=SD.parent
-					inner join `tabSalary Component` SC
-						on SD.salary_component=SC.name
-					where
-						SD.parenttype='Salary Structure'
-						and SC.is_included_for_delay_and_overtime=1
-						and SS.docstatus = 1
-						and SS.is_active = 'Yes'
-						and SS.company = %(company)s 
+					on SS.name=SD.parent
+				where
+					SD.parenttype='Salary Structure'
+					and SD.is_included_for_delay_and_overtime=1
+					and SS.docstatus = 1
+					and SS.is_active = 'Yes'
+					and SS.company = %(company)s 
 					{condition}""".format(condition=condition),
 				{"company": self.company})
+
+		# is_included_for_delay_and_overtime flag check at component level
+		# sal_struct = frappe.db.sql_list("""
+		# 		select distinct(SS.name)  from `tabSalary Structure` SS
+		# 			inner join `tabSalary Detail` SD
+		# 				on SS.name=SD.parent
+		# 			inner join `tabSalary Component` SC
+		# 				on SD.salary_component=SC.name
+		# 			where
+		# 				SD.parenttype='Salary Structure'
+		# 				and SC.is_included_for_delay_and_overtime=1
+		# 				and SS.docstatus = 1
+		# 				and SS.is_active = 'Yes'
+		# 				and SS.company = %(company)s 
+		# 			{condition}""".format(condition=condition),
+		# 		{"company": self.company})
 		print sal_struct
 		if sal_struct:
 

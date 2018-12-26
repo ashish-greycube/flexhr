@@ -509,7 +509,7 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 
 				if holiday==True:
 					# Holiday so do nothing
-					remark=_('Holiday. '+dt +' So, no processing')
+					remark=_('Holiday. '+formatdate(dt) +' So, no processing')
 				else:
 					#It is working day
 					present_status=None
@@ -577,7 +577,7 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 						print getdate(half_day_date)
 						if half_day_date!=None and getdate(dt)==getdate(half_day_date):
 							#There is leave with half day and it matches current date
-							remark=_('Half-day '+leave_name+ ' on '+ str(half_day_date)+ ' So, no processing')
+							remark=_('Half-day '+leave_name+ ' on '+ formatdate(half_day_date)+ ' So, no processing')
 						else:
 							#It is leave with full day
 							if present_status=='absent':
@@ -588,49 +588,51 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 								print shorten_status
 								att_name=create_attendance(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,status=status)
 								if new_shorten_leave!=None:
-									remark=_(att_name+' is created '+' & existing '+leave_name+' is cancelled & new shortened '+ new_shorten_leave+' created')
+									remark=_(att_name+' present created & existing '+leave_name+' is cancelled & new shortened '+ new_shorten_leave+' created')
 								elif new_shorten_leave==None:
-									remark=_(att_name+' is created & existing '+leave_name+' cancelled')
+									remark=_(att_name+' present created & existing '+leave_name+' cancelled')
 							
 							elif present_status=='partial':
 								# there is leave and employee is present. so create AR and update leave remark
 								att_req=attendance_request_exist(emp_id,dt,(0,1,2))
 								if att_req:
 									# It is re-run
-									remark=_('Re-run. Emp is '+present_status+' present. Request: '+att_req +' exist for '+leave_name)
+									remark=_('Re-run. Emp is '+present_status.capitalize()+' present. Request: '+att_req +' exist for '+leave_name)
 								else:
 									shorten_status,new_shorten_leave=shorten_leave(leave_name,dt,'partial')
 									print 'new_shorten_leave'
 									print shorten_status
 									print new_shorten_leave
 									if shorten_status=='shortened':
-										explanation='Employee  is '+present_status+' present, hence system created LWP '+leave_name+'.Once it is cancelled, you may submit this request'
-										att_req=create_attendance_request(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,explanation)
-										ar_url = get_url_to_form("Attendance Request",att_req)
-										description =present_status+' presence on '+dt+' In: '+str(emp_in_time)+' and Out: '+str(emp_out_time)+ '\n system created LWP'
+										description =present_status.capitalize()+' presence on '+dt+' In: '+str(emp_in_time)+' and Out: '+str(emp_out_time)+ '\n system created LWP'
+										delete_draft_status_leave(emp_name,dt,docstatus=0)
 										leave_name=create_lwp(emp_id,dt,description,follow_via_email=0)
-										attendance_request_remark='Employee, is partial present. So use your judgement. Honour system created LWP OR cancel LWP and submit '+ar_url+ ' for Overtime/Penalty calculation'
-										remark=present_status+' present,So created LWP. Honour LWP OR cancel '+leave_name+' & submit '+att_req+' , existing leave is shortened'
-										leave_url=get_url_to_form("Leave Application",new_shorten_leave)
-									elif shorten_status=='no_action':
-										explanation='Employee  is '+present_status+' present, There is existing '+leave_name+'.Once it is cancelled, you may submit this request'
+										explanation='Employee  is '+present_status.capitalize()+' present, hence system created LWP '+leave_name+'.Once it is cancelled, you may submit this request'
 										att_req=create_attendance_request(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,explanation)
 										ar_url = get_url_to_form("Attendance Request",att_req)
-										description=dt+' '+present_status+ ' present. In '+str(emp_in_time)+ ' Out '+str(emp_out_time)
+										attendance_request_remark='Employee, is partial present. So use your judgement. Honour system created LWP OR cancel LWP and submit '+ar_url+ ' for Overtime/Penalty calculation'
+										remark=_(present_status.capitalize()+' present,So created LWP. Honour LWP OR cancel '+leave_name+' & submit '+att_req+' , existing leave is shortened')
+										leave_url=get_url_to_form("Leave Application",leave_name)
+									elif shorten_status=='no_action':
+										explanation='Employee  is '+present_status.capitalize()+' present, There is existing '+leave_name+'.Once it is cancelled, you may submit this request'
+										att_req=create_attendance_request(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,explanation)
+										ar_url = get_url_to_form("Attendance Request",att_req)
+										description=dt+' '+present_status.capitalize()+ ' present. In '+str(emp_in_time)+ ' Out '+str(emp_out_time)
 										update_leave_details(leave_name,description)
 										attendance_request_remark='Employee, is partial present. So use your judgement. Honour existing leave OR cancel leave and submit '+ar_url+ ' for Overtime/Penalty calculation'
-										remark=present_status+' present, Honour existing leave OR cancel '+leave_name+' & submit '+att_req
+										remark=_(present_status.capitalize()+' present, Honour existing leave OR cancel '+leave_name+' & submit '+att_req)
 										leave_url=get_url_to_form("Leave Application",leave_name)
 									elif shorten_status=='canceled':
 										# future date leave is canceled and current date LWP is created
-										explanation='Employee  is '+present_status+' present, hence system created LWP '+leave_name+'.Once it is cancelled, you may submit this request'
+										description =present_status.capitalize()+' presence on '+dt+' In: '+str(emp_in_time)+' and Out: '+str(emp_out_time)+ '\n system created LWP'
+										delete_draft_status_leave(emp_name,dt,docstatus=0)
+										leave_name=create_lwp(emp_id,dt,description,follow_via_email=0)
+										explanation='Employee  is '+present_status.capitalize()+' present, hence system created LWP '+leave_name+'.Once it is cancelled, you may submit this request'
 										att_req=create_attendance_request(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,explanation)
 										ar_url = get_url_to_form("Attendance Request",att_req)
-										description =present_status+' presence on '+dt+' In: '+str(emp_in_time)+' and Out: '+str(emp_out_time)+ '\n system created LWP'
-										leave_name=create_lwp(emp_id,dt,description,follow_via_email=0)
 										attendance_request_remark='Employee, is partial present. So use your judgement. Honour system created LWP OR cancel LWP and submit '+ar_url+ ' for Overtime/Penalty calculation'
-										remark=present_status+' present,So created LWP. Honour LWP OR cancel '+leave_name+' & submit '+att_req+' , existing leave is cancelled'
-										leave_url=get_url_to_form("Leave Application",new_shorten_leave)				
+										remark=_(present_status.capitalize()+' present,So created LWP. Honour LWP OR cancel '+leave_name+' & submit '+att_req+' , existing leave is cancelled')
+										leave_url=get_url_to_form("Leave Application",leave_name)				
 									#common
 									# email inform
 									args={
@@ -656,21 +658,15 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 						if present_status=='absent':
 						# there is no leave and emp is absent , so create LWP
 							description = 'Employee is absent on '+ dt +' as per device record. Hence system has generated LWP'
-							# before LWP , check for any leave for same date in draft state
-							draft_leave=get_draft_leave_of_employee(emp_name,dt,docstatus=0)
-							if draft_leave:
-								draft_leave_name=draft_leave["leave_name"]
-								doc=frappe.get_doc('Leave Application',draft_leave_name)
-								doc.description='Draft leave deleted by attendance system. As per rule'
-								doc.save(ignore_permissions=True)
-								frappe.delete_doc('Leave Application',draft_leave_name)
 							if att_detail==None:
+								# before LWP , check for any leave for same date in draft state
+								delete_draft_status_leave(emp_name,dt,docstatus=0)
 								leave_name=create_lwp(emp_id,dt,description,follow_via_email=1)
-								remark=_('Employee is absent on '+ dt +' LWP created '+leave_name)
+								remark=_('Employee is absent on '+ formatdate(dt) +' LWP created '+leave_name)
 								review=0
 								reviewer=None
 							else:
-								remark=_('Employee is absent on '+ dt +'& there is '+att_name+ ' with status '+att_status)
+								remark=_('Employee is absent on '+ formatdate(dt) +'& there is '+att_name+ ' with status '+att_status)
 								review=1
 								reviewer='Admin'
 								review_count +=1
@@ -687,12 +683,12 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 							if att_req!=None:
 								remark=_('Re-run. AR '+str(att_req)+ ' exist for partial presence')
 							elif att_req==None :
-								description =present_status+' presence on '+dt+' In: '+str(emp_in_time)+' and Out: '+str(emp_out_time)+ '\n system created LWP'
+								description =_(present_status.capitalize()+' presence on '+dt+' In: '+str(emp_in_time)+' and Out: '+str(emp_out_time)+ '\n system created LWP')
 								# before LWP , check for any leave for same date in draft state
 								delete_draft_status_leave(emp_name,dt,docstatus=0)
 								if att_detail==None:
 									leave_name=create_lwp(emp_id,dt,description,follow_via_email=0)
-									explanation='Employee  is '+present_status+' present, hence system created LWP '+leave_name+'.Once it is cancelled, you may submit this request'
+									explanation='Employee  is '+present_status.capitalize()+' present, hence system created LWP '+leave_name+'.Once it is cancelled, you may submit this request'
 									att_req=create_attendance_request(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,explanation)
 									ar_url = get_url_to_form("Attendance Request",att_req)
 									# email inform
@@ -711,7 +707,7 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 										attendance_request_remark='Employee, is partial present. So use your judgement. Honour system created LWP OR cancel LWP and submit '+ar_url+ ' for Overtime/Penalty calculation'
 										args["attendance_request_remark"]=attendance_request_remark
 										notify_leave_approver(leave_approver,args)
-									remark=present_status+' present,So created LWP. Honour LWP OR cancel '+leave_name+' & submit '+att_req
+									remark=present_status.capitalize()+' present,So created LWP. Honour LWP OR [cancel '+leave_name+' & submit '+att_req+']'
 									review=1
 									reviewer='HR'	
 									review_count +=1
@@ -922,6 +918,8 @@ def shorten_leave(existing_leave_name,current_date,present_status):
 	# get_existing_leave_details
 	leave=frappe.get_doc('Leave Application',existing_leave_name)
 	if leave:
+		new_half_day=None
+		new_half_day_date=None
 		if(getdate(leave.from_date)<getdate(current_date)):
 			#new leave data
 			new_end_date=getdate(add_days((getdate(current_date)), -1))
@@ -932,7 +930,7 @@ def shorten_leave(existing_leave_name,current_date,present_status):
 					new_half_day_date=leave.half_day_date
 			new_no_of_leave_days=get_number_of_leave_days(leave.employee, leave.leave_type,new_start_date,new_end_date,new_half_day,new_half_day_date)
 			if new_no_of_leave_days>0:
-				leave.db_set('description', _('Leave is cancelled by system. Employee has '+present_status+ ' turned up on '+str(current_date)+ ' New leave was created for previous period'))
+				leave.db_set('description', _('Leave is cancelled by system. Employee has '+present_status.capitalize()+ ' turned up on '+str(current_date)+ ' New leave was created for previous period'))
 				leave.cancel()
 				#new shortened leave
 				new_leave=frappe.copy_doc(leave)
@@ -959,7 +957,7 @@ def shorten_leave(existing_leave_name,current_date,present_status):
 					return shorten_status,None			
 		elif(getdate(leave.from_date)==getdate(current_date)):
 			if present_status=='full':
-				leave.db_set('description', _('Leave is cancelled by system. Employee has '+ present_status+' turned up on '+str(current_date)+', No leave created'))
+				leave.db_set('description', _('Leave is cancelled by system. Employee has '+ present_status.capitalize()+' turned up on '+str(current_date)+', No leave created'))
 				leave.cancel()
 				shorten_status='canceled'
 				return shorten_status,None
@@ -973,7 +971,7 @@ def shorten_leave(existing_leave_name,current_date,present_status):
 							new_half_day_date=leave.half_day_date
 					new_no_of_leave_days=get_number_of_leave_days(leave.employee, leave.leave_type,new_start_date,new_end_date,new_half_day,new_half_day_date)
 					if new_no_of_leave_days>0:
-						leave.db_set('description', _('Leave is cancelled by system. Employee has '+ present_status+' turned up on '+str(current_date)+', LWP is created for partial presence'))
+						leave.db_set('description', _('Leave is cancelled by system. Employee has '+ present_status.capitalize()+' turned up on '+str(current_date)+', LWP is created for partial presence'))
 						leave.cancel()
 						shorten_status='canceled'
 						return shorten_status,None
@@ -1031,7 +1029,7 @@ def shorten_leave1(leave_name,split_date,present_status):
 			new_leave.follow_via_email=0
 			new_leave.status='Approved'
 			new_leave.posting_date=today()
-			new_leave.description='Shorten version of '+leave_name
+			new_leave.description=_('Shorten version of ')+leave_name
 			new_leave.save(ignore_permissions=True)
 			new_leave.submit()
 			return new_leave.name
@@ -1135,6 +1133,6 @@ def delete_draft_status_leave(emp_name,dt,docstatus=0):
 	if draft_leave:
 		draft_leave_name=draft_leave["leave_name"]
 		doc=frappe.get_doc('Leave Application',draft_leave_name)
-		doc.description='Draft leave deleted by attendance system. As per rule'
+		doc.description=_('Draft leave deleted by attendance system. As per rule')
 		doc.save(ignore_permissions=True)
 		frappe.delete_doc('Leave Application',draft_leave_name)
