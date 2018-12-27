@@ -32,7 +32,11 @@ def precondition_for_auto_attendance():
 	if not holiday_list :
 		frappe.throw(_('Please set a default Holiday List for Company {0}').format(company))
 
-	
+	#Set leave type for auto LWP
+	leave_type = frappe.db.get_single_value('HR Settings', 'default_leave_type_for_lwp')
+	if not leave_type :
+		frappe.throw(_('Please set default leave type for auto LWP. To be used when employee is absent'))
+
 	#Employee with missing Attendance Device User ID 
 	attendance_user_id=frappe.db.sql("""select employee_name from `tabEmployee`  
 						where attendance_user_id is null
@@ -52,6 +56,12 @@ def precondition_for_auto_attendance():
 	template = frappe.db.get_single_value('HR Settings', 'attendance_reconciliation_information_template')
 	if not template:
 		frappe.throw(_("Please set default template for Attendance Reconciliation Information in HR Settings."))
+
+	# set default shift
+	# company = frappe.db.get_value("Global Defaults", None, "default_company")
+	# default_shift_name=frappe.db.get_value("Company", company, "default_shift_type")
+	# if not default_shift_name :
+	# 	frappe.throw(_('Please set default shift type'))
 
 	#Default shift with details
 	shift_detail=frappe.db.sql("""select 

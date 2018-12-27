@@ -70,6 +70,21 @@ def validate_if_holiday_or_leave(self,attendance_date) :
         return True
 
 
+@frappe.whitelist()
+def default_leave_type_for_lwp(doctype, txt, searchfield, start, page_len, filters):
+        # return frappe.get_list('Leave Type', filters={'docstatus': 0, 'is_lwp': 1}, fields=['name'], order_by='modified')
+        return frappe.db.sql("""select name from `tabLeave Type`
+where 
+docstatus=0 
+and is_lwp=1""".format(**{
+			'key': searchfield,
+		}), {
+			'txt': "%%%s%%" % txt,
+			'_txt': txt.replace("%", ""),
+			'start': start,
+			'page_len': page_len
+		})
+
 
 ####
 
@@ -80,8 +95,6 @@ def is_holiday_on_half_date(employee, leave_type,half_day_date):
                         return True
         else:
                 return False
-
-
 def get_number_of_leave_days(employee, leave_type, from_date, to_date, half_day = None, half_day_date = None):
 	number_of_days = 0
 	if cint(half_day) == 1:

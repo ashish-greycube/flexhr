@@ -31,7 +31,8 @@ doctype_js = {
 	"Shift Type" : "public/js/shift_type.js",
 	"Payroll Entry" : "public/js/payroll_entry.js",
 	"Leave Application" : "public/js/leave_application.js",
-	"Attendance" : "public/js/attendance.js"
+	"Attendance" : "public/js/attendance.js",
+	"HR Settings":"public/js/hr_settings.js"
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}

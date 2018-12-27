@@ -109,9 +109,10 @@ def create_attendance(emp,dt,emp_in_time,emp_out_time,duration,shift_start_time,
 				return employee_attendance.name
 
 def create_lwp(employee,date,description,follow_via_email=0):
+	leave_type = frappe.db.get_single_value('HR Settings', 'default_leave_type_for_lwp')
 	leave = frappe.new_doc("Leave Application")
 	leave.employee=employee
-	leave.leave_type='Leave Without Pay'
+	leave.leave_type=leave_type
 	leave.from_date=date
 	leave.to_date=date
 	leave.description=description
@@ -212,7 +213,10 @@ def get_shift_detail_of_employee(employee, date):
 		shift_type=shift[0]["shift_type"]
 		shift_type="'"+shift_type+"'"
 		condition_str=' name ='+shift_type
-	else:	
+	else:
+		# company = frappe.db.get_value("Global Defaults", None, "default_company")
+		# default_shift_name=frappe.db.get_value("Company", company, "default_shift_type")	
+		# condition_str=' name='+default_shift_name	
 		condition_str=' is_default=1'
 	
 	shift=frappe.db.sql("""select name as shift_type ,start_time ,end_time,
@@ -441,7 +445,20 @@ def run_job(start_date,end_date):
 			process_status='Fail'
 		if (send_only_failure_emails==1 and process_status=='Fail') or (send_only_failure_emails==0):
 			print process_status
-			notify_errors(err_msg,att_log.name,process_status)
+			att_log_url = get_url_to_form("Attendance Log",att_log.name)
+			args={
+				"run_on":att_log.run_on,
+				"run_status":att_log.run_status,
+				"review_count":att_log.review_count,
+				"hr_review_count":att_log.hr_review_count,
+				"admin_review_count":att_log.admin_review_count,
+				"from_date":att_log.from_date,
+				"to_date":att_log.to_date,
+				"att_log_url":att_log_url,
+				"error":att_log.error
+			}
+			notify_auto_attendance_nightly_job_status(args)
+			# notify_errors(err_msg,att_log.name,process_status)
 		frappe.db.set_value('Attendance Processor', 'Attendance Processor', 'last_run_on', now_datetime())
 		frappe.db.set_value('Attendance Processor', 'Attendance Processor', 'attendance_log', att_log.name)
 	return
@@ -821,6 +838,9 @@ def notify(args):
 	sender      	    = dict()
 	sender['email']     = frappe.get_doc('User', frappe.session.user).email
 	sender['full_name'] = frappe.utils.get_fullname(sender['email'])
+	print sender['email']
+	print contact
+	print args.subject
 
 	try:
 		frappe.sendmail(
@@ -833,6 +853,22 @@ def notify(args):
 	except frappe.OutgoingEmailError:
 		pass
 
+
+def notify_auto_attendance_nightly_job_status(args):
+	if frappe.db.get_value("Attendance Processor", None, "send_job_email_to"):
+		recipients = split_emails(frappe.db.get_value("Attendance Processor", None, "send_job_email_to"))
+	nightly_job_notification_template = frappe.db.get_value("Attendance Processor", None, "nightly_job_notification_template")
+	email_template = frappe.get_doc("Email Template", nightly_job_notification_template)
+	message = frappe.render_template(email_template.response, args)
+	print message
+	print recipients
+	notify({
+		# for post in messages
+		"message": message,
+		"message_to": recipients,
+		# for email
+		"subject": email_template.subject
+	})
 
 def notify_errors(exceptions,att_log,status):
 	
