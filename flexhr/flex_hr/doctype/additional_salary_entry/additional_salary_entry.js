@@ -81,6 +81,9 @@ frappe.ui.form.on('Additional Salary Entry', {
 	branch: function (frm) {
 		frm.events.clear_employee_table(frm);
 	},
+	employee: function (frm) {
+		frm.events.clear_employee_table(frm);
+	},
 	set_end_date: function(frm){
 		frappe.call({
 			method: 'erpnext.hr.doctype.payroll_entry.payroll_entry.get_end_date',

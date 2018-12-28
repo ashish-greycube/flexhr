@@ -64,7 +64,7 @@ class AdditionalSalaryEntry(Document):
 		self.check_mandatory()
 
 		cond = ''
-		for f in ['company', 'branch', 'department', 'designation']:
+		for f in ['company', 'branch', 'department', 'designation','employee']:
 			if self.get(f):
 				cond += " and t1." + f + " = '" + self.get(f).replace("'", "\'") + "'"
 
@@ -77,7 +77,7 @@ class AdditionalSalaryEntry(Document):
 		"""
 		cond = self.get_filter_condition()
 		cond += self.get_joining_releiving_condition()
-
+		print cond
 		#condition = 'order by modified desc LIMIT 1'
 		condition = ''
 		if self.payroll_frequency:
@@ -112,6 +112,7 @@ class AdditionalSalaryEntry(Document):
 		# 				and SS.company = %(company)s 
 		# 			{condition}""".format(condition=condition),
 		# 		{"company": self.company})
+		print 'sal_struct'
 		print sal_struct
 		if sal_struct:
 
@@ -135,7 +136,7 @@ class AdditionalSalaryEntry(Document):
 			# single ss only
 			cond += "and t2.salary_structure IN %(sal_struct)s "
 			cond += "and %(from_date)s >= t2.from_date and not exists (	select 1 from `tabSalary Structure Assignment` t3 where t3.name <> t2.name	and t3.employee = t2.employee and t3.from_date > t2.from_date and   %(from_date)s >=t3.from_date )	order by t2.from_date desc"
-			
+			print cond
 			emp_list = frappe.db.sql("""
 				select t1.name as employee, t1.employee_name, t1.department, t1.designation,
 					t2.salary_structure, t2.base
