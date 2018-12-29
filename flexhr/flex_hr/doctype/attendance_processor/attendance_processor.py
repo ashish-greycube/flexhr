@@ -69,7 +69,7 @@ def precondition_for_auto_attendance():
 		late_checkin_deduction_based_on,
 		ignore_late_in,
 		early_checkout_deduction_based_on,
-		ignore_ealry_out,
+		ignore_early_out,
 		min_overtime_required,
 		max_overtime_allowed
 		from `tabShift Type` where is_default=1 and docstatus<2""",as_dict=1)
