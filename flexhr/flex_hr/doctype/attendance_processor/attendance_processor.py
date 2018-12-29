@@ -66,10 +66,9 @@ def precondition_for_auto_attendance():
 	#Default shift with details
 	shift_detail=frappe.db.sql("""select 
 		DATE_FORMAT(working_hours,'%H:%I:%S') as working_hours,
-		late_checkin_penalty_based_on,
 		late_checkin_deduction_based_on,
 		ignore_late_in,
-		early_checkout_penalty_based_on,
+		early_checkout_deduction_based_on,
 		ignore_ealry_out,
 		min_overtime_required,
 		max_overtime_allowed
