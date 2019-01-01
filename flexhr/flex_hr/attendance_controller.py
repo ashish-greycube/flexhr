@@ -480,16 +480,16 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 			if is_cmp_holiday==False:
 			# stop processing if less than 50% of attendance is present in device on a working day.	
 				emp_wo_att_count=emp_wo_attendance(dt)
-				per_of_emp_absent=(flt(emp_wo_att_count)/flt(total_emp_count))*100
-				per_of_emp_absent = 100 if per_of_emp_absent==0.0 else flt(per_of_emp_absent,2)
+				per_of_emp_present=((flt(total_emp_count)-flt(emp_wo_att_count))/flt(total_emp_count))*100
+				per_of_emp_present = flt(per_of_emp_present,2)
 				print 'emp_wo_att_count'
 				print emp_wo_att_count
 				print 'total_emp_count'
 				print total_emp_count
 				print 'per_of_emp_present'
-				print per_of_emp_absent
-				if (per_of_emp_absent)>50:
-					frappe.throw(_("{0} is working day. Device has missing data for {1} % of employee and hence cann't run. Total Employee are {2}. Absent Employee are {3}").format(dt,per_of_emp_absent,total_emp_count,emp_wo_att_count))	
+				print per_of_emp_present
+				if (per_of_emp_present)<51:
+					frappe.throw(_("{0} is working day. Device shows data for {1} % of employees. It should be more than 50% and hence cann't run. \n Total Employee are {2}. Absent Employee are {3}").format(dt,per_of_emp_present,total_emp_count,emp_wo_att_count))	
 
 		# fetch all employee device data for particular date
 		check_in=get_all_employee_checkin_detail(dt)
