@@ -221,7 +221,7 @@ def get_shift_detail_of_employee(employee, date):
 	
 	shift=frappe.db.sql("""select name as shift_type ,start_time ,end_time,
 	min_overtime_required,max_overtime_allowed,
-	early_checkout_deduction_based_on,ignore_ealry_out,
+	early_checkout_deduction_based_on,ignore_early_out,
 	late_checkin_deduction_based_on,working_hours
 	from
 	 `tabShift Type`
