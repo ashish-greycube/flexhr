@@ -254,7 +254,7 @@ def calculate_overtime(shift_type,emp_out_time):
 def get_all_employee_checkin_detail(date):
 	check_in=frappe.db.sql("""
 select min(in_time) in_time,min(in_date_time) in_date_time , max(out_time) out_time, max(out_date_time) out_date_time,att_date,
-emp.employee, emp.employee_name as emp_name,emp.salary_slip_based_on,emp.present_based_on,
+emp.name as employee, emp.employee_name as emp_name,emp.salary_slip_based_on,emp.present_based_on,
 emp.is_eligible_for_attendace_based_overtime_earning,emp.ignore_late_checkin_deduction,emp.ignore_early_checkout_deduction
 from
 `tabEmployee` emp
