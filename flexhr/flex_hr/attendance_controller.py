@@ -967,6 +967,7 @@ def shorten_leave(existing_leave_name,current_date,present_status):
 			new_no_of_leave_days=get_number_of_leave_days(leave.employee, leave.leave_type,new_start_date,new_end_date,new_half_day,new_half_day_date)
 			if new_no_of_leave_days>0:
 				leave.db_set('description', _('Leave is cancelled by system. Employee has '+present_status.capitalize()+ ' turned up on '+str(current_date)+ ' New leave was created for previous period'))
+				leave.db_set('status','Cancelled')
 				leave.cancel()
 				#new shortened leave
 				new_leave=frappe.copy_doc(leave)
@@ -988,12 +989,14 @@ def shorten_leave(existing_leave_name,current_date,present_status):
 					return shorten_status,None
 				elif present_status=='full':
 					leave.db_set('description', _('Leave is cancelled by system. Employee has fully turned up on '+str(current_date)+', No leave created'))
+					leave.db_set('status','Cancelled')
 					leave.cancel()
 					shorten_status='canceled'
 					return shorten_status,None			
 		elif(getdate(leave.from_date)==getdate(current_date)):
 			if present_status=='full':
 				leave.db_set('description', _('Leave is cancelled by system. Employee has '+ present_status.capitalize()+' turned up on '+str(current_date)+', No leave created'))
+				leave.db_set('status','Cancelled')
 				leave.cancel()
 				shorten_status='canceled'
 				return shorten_status,None
@@ -1008,6 +1011,7 @@ def shorten_leave(existing_leave_name,current_date,present_status):
 					new_no_of_leave_days=get_number_of_leave_days(leave.employee, leave.leave_type,new_start_date,new_end_date,new_half_day,new_half_day_date)
 					if new_no_of_leave_days>0:
 						leave.db_set('description', _('Leave is cancelled by system. Employee has '+ present_status.capitalize()+' turned up on '+str(current_date)+', LWP is created for partial presence'))
+						leave.db_set('status','Cancelled')
 						leave.cancel()
 						shorten_status='canceled'
 						return shorten_status,None
@@ -1038,23 +1042,27 @@ def shorten_leave1(leave_name,split_date,present_status):
 			leave.db_set('description', _('Cancelled by system as employee has fully turned up during leave period on '+present_on+', No leave created'))
 			print 'cancelled by system as employee is turned up during leave period'
 			#leave.flags.ignore_validate = True
+			leave.db_set('status','Cancelled')
 			leave.cancel()
 
 		if first_total_leave_days>0 and present_status=='full':
 			leave.db_set('description', _('Cancelled by system as employee has fully turned up on '+present_on+ ' In lieu, new shortened leave was created'))
 			print 'cancelled by system as employee is turned up during leave period'
 			#leave.flags.ignore_validate = True
+			leave.db_set('status','Cancelled')
 			leave.cancel()
 		if (first_total_leave_days>0 and present_status=='partial'):
 			leave.db_set('description', _('Cancelled by system as employee has partially turned up on '+present_on+ ' In lieu, new shortened leave was created'))
 			print 'cancelled by system as employee is turned up during leave period'
 			#leave.flags.ignore_validate = True
+			leave.db_set('status','Cancelled')
 			leave.cancel()
 		if (first_total_leave_days==0 and present_status=='partial' and getdate(first_start_date)==getdate(present_on)):
 		#Employee partially turns up on first day of leave period
 			leave.db_set('description', _('Cancelled by system as employee has partially turned up on '+present_on+ ' Existing leave is cancelled as turned up on first date'))
 			print 'cancelled by system as employee is turned up during leave period'
 			#leave.flags.ignore_validate = True
+			leave.db_set('status','Cancelled')
 			leave.cancel()
 		if (first_total_leave_days > 0) :
 			new_leave=frappe.copy_doc(leave)
@@ -1107,6 +1115,7 @@ def split_leave(leave_name,split_date,split_type='two_part'):
 			if first_total_leave_days>0 or second_total_leave_days>0: 
 				leave.db_set('description', 'cancelled by system, and splited into 2 leaves as leave period was overlapping payroll dates')
 				leave.flags.ignore_validate = True
+				leave.db_set('status','Cancelled')
 				leave.cancel()
 			if (split_type=='two_part' and first_total_leave_days > 0):
 				new_leave=frappe.copy_doc(leave)
