@@ -28,6 +28,12 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Employee Checkin",
+				},
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Employee In Out Analysis",
+					"doctype": "Attendance"
 				}
 			]
 		},
