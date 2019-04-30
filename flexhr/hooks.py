@@ -95,9 +95,9 @@ doc_events = {
 		"on_submit":"flexhr.api.copy_fields_from_att_req_to_att",
 		"on_trash":"flexhr.api.stop_delete_of_att_req"
 	},
-	
-    
-
+	"Salary Slip": {
+		"autoname": "flexhr.flex_hr.custom_salary_slip.create_lwp_component",
+	}
 }
 
 # Scheduled Tasks
