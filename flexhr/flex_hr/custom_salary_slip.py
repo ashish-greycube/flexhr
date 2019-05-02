@@ -2,6 +2,7 @@ import frappe
 from erpnext.hr.doctype.salary_slip.salary_slip import SalarySlip
 from frappe import _
 from frappe.utils import cint,flt, getdate, rounded
+from erpnext import get_default_company
 
 def sum_components(self, component_type, total_field, precision,amount_fhr_depends_on_absent):
     joining_date, relieving_date = frappe.db.get_value("Employee", self.employee,
@@ -14,9 +15,14 @@ def sum_components(self, component_type, total_field, precision,amount_fhr_depen
         frappe.throw(_("Please set the Date Of Joining for employee {0}").format(frappe.bold(self.employee_name)))
     
     for d in self.get(component_type):
-        # get value of fhr_depends_on_absent from component
-        component = frappe.get_doc("Salary Component", d.salary_component)
-        fhr_depends_on_absent = cint(component.fhr_depends_on_absent)
+        # get value of fhr_depends_on_absent from _salary_structure_doc
+        if not getattr(self, '_salary_structure_doc', None):
+            self._salary_structure_doc = frappe.get_doc('Salary Structure', self.salary_structure)
+        data = SalarySlip.get_data_for_eval(self)
+        for key in ('earnings', 'deductions'):
+            for struct_row in self._salary_structure_doc.get(key):
+                if key=="earnings" and struct_row.fhr_depends_on_absent == 1:
+                    fhr_depends_on_absent = cint(struct_row.fhr_depends_on_absent)
 
         if (self.salary_structure and
             cint(fhr_depends_on_absent) and
@@ -44,7 +50,10 @@ def calculate_lwp_net_pay(self):
     return amount_fhr_depends_on_absent
 
 def create_lwp_component(self,method):
-    salary_component_absent='Absent'
+
+    company = get_default_company()
+    salary_component_absent=frappe.get_value('Company', company, 'fhr_absent_component')
+
     show_lwp_as_deduction=int(frappe.db.get_single_value("HR Settings", "show_lwp_as_deduction"))
     if show_lwp_as_deduction==1:
         if not (len(self.get("earnings")) or len(self.get("deductions"))):

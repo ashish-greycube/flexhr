@@ -10,6 +10,7 @@ from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff,
 from frappe.model.document import Document
 from erpnext.hr.doctype.payroll_entry.payroll_entry import get_start_end_dates
 from flexhr.flex_hr.attendance_controller import get_shift_detail_of_employee
+from erpnext import get_default_company
 
 class AdditionalSalaryEntry(Document):
 	def validate(self):
@@ -151,11 +152,16 @@ class AdditionalSalaryEntry(Document):
 			return emp_list
 
 	def create_additional_salary_slips(self):
+    	company = get_default_company()	
+    	fhr_delay_component=frappe.get_value('Company', company, 'fhr_delay_component')
+    	fhr_overtime_component=frappe.get_value('Company', company, 'fhr_overtime_component')
+    	if !fhr_delay_component or !fhr_overtime_component:
+    		frappe.throw(_("Delay/Overtime component are not defined in default company"))
 		for d in self.employees:
 			if d.irregular_checkin_checkout_deduction>0:
 				ad_sal = frappe.new_doc("Additional Salary")
 				ad_sal.employee=d.employee
-				ad_sal.salary_component='Delay Penalty'
+				ad_sal.salary_component=fhr_delay_component
 				ad_sal.amount=d.irregular_checkin_checkout_deduction
 				ad_sal.payroll_date=self.posting_date
 				ad_sal.overwrite_salary_structure_amount=0
@@ -164,7 +170,7 @@ class AdditionalSalaryEntry(Document):
 			if d.overtime_earning>0:
 				ad_sal = frappe.new_doc("Additional Salary")
 				ad_sal.employee=d.employee
-				ad_sal.salary_component='Overtime'
+				ad_sal.salary_component=fhr_overtime_component
 				ad_sal.amount=d.overtime_earning
 				ad_sal.payroll_date=self.posting_date
 				ad_sal.overwrite_salary_structure_amount=0
