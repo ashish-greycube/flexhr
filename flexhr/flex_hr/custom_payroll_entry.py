@@ -60,12 +60,12 @@ def make_accrual_jv_entry(self):
             print('custome--custome-----custome------------------------make_accrual_jv_entry----------')
             print(ss.employee)
             print ss.name
-
-            employee_payroll_cost_center=frappe.get_value('Employee', ss.name, 'employee_payroll_cost_center')
-            if not employee_payroll_cost_center:
+            employee_payroll_cost_center=None
+            employee_payroll_cost_center=frappe.get_value('Employee', ss.employee, 'employee_payroll_cost_center')
+            if employee_payroll_cost_center is None:
                 employee_payroll_cost_center=self.cost_center
-                if not employee_payroll_cost_center:
-                     employee_payroll_cost_center=frappe.get_cached_value('Company',{"company_name": self.company},  "cost_center")
+                if employee_payroll_cost_center is None:
+                        employee_payroll_cost_center=frappe.get_cached_value('Company',{"company_name": self.company},  "cost_center")
 
             earnings = get_salary_component_total_each_emp(self,ss_name=ss.name,component_type = "earnings") or {}
             deductions = get_salary_component_total_each_emp(self,ss_name=ss.name,component_type = "deductions") or {}
@@ -200,9 +200,9 @@ def create_journal_entry_each_emp(self, je_payment_amount, user_remark,party):
     payment_amount = flt(je_payment_amount, precision)
 
     employee_payroll_cost_center=frappe.get_value('Employee', party, 'employee_payroll_cost_center')
-    if not employee_payroll_cost_center:
+    if employee_payroll_cost_center is None:
         employee_payroll_cost_center=self.cost_center
-        if not employee_payroll_cost_center:
+        if employee_payroll_cost_center is None:
                 employee_payroll_cost_center=frappe.get_cached_value('Company',{"company_name": self.company},  "cost_center")
 
     journal_entry.set("accounts", [
