@@ -152,11 +152,11 @@ class AdditionalSalaryEntry(Document):
 			return emp_list
 
 	def create_additional_salary_slips(self):
-    	company = get_default_company()	
-    	fhr_delay_component=frappe.get_value('Company', company, 'fhr_delay_component')
-    	fhr_overtime_component=frappe.get_value('Company', company, 'fhr_overtime_component')
-    	if !fhr_delay_component or !fhr_overtime_component:
-    		frappe.throw(_("Delay/Overtime component are not defined in default company"))
+		company = get_default_company()	
+		fhr_delay_component=frappe.get_value('Company', company, 'fhr_delay_component')
+		fhr_overtime_component=frappe.get_value('Company', company, 'fhr_overtime_component')
+		if !fhr_delay_component or !fhr_overtime_component:
+			frappe.throw(_("Delay/Overtime component are not defined in default company"))
 		for d in self.employees:
 			if d.irregular_checkin_checkout_deduction>0:
 				ad_sal = frappe.new_doc("Additional Salary")
