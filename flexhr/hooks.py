@@ -96,8 +96,12 @@ doc_events = {
 		"on_trash":"flexhr.api.stop_delete_of_att_req"
 	},
 	"Salary Slip": {
-		"autoname": "flexhr.flex_hr.custom_salary_slip.create_lwp_component",
-	}
+		"autoname": "flexhr.flex_hr.custom_salary_slip.create_lwp_component"
+	},
+	"Payroll Entry": {
+		"onload": "flexhr.flex_hr.custom_payroll_entry.create_custom_jv",
+		"on_change":"flexhr.flex_hr.custom_payroll_entry.create_custom_jv"
+	},
 }
 
 # Scheduled Tasks

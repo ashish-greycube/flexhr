@@ -50,7 +50,9 @@ def calculate_lwp_net_pay(self):
     return amount_fhr_depends_on_absent
 
 def create_lwp_component(self,method):
-
+    print('custom ss----------------------------------------------------')
+    print(method)
+    print('custom ss----------------------------------------------------')
     company = get_default_company()
     salary_component_absent=frappe.get_value('Company', company, 'fhr_absent_component')
 
@@ -81,3 +83,4 @@ def create_lwp_component(self,method):
             ad_sal.overwrite_salary_structure_amount=1
             ad_sal.save()
             ad_sal.submit()
+    return
