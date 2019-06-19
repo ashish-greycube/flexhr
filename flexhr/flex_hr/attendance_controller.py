@@ -60,7 +60,7 @@ def create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,rem
 	check_in.att_type = att_type
 	att_date_time=datetime.datetime.fromtimestamp(float(att_time)).strftime("%Y-%m-%d %H:%M:%S")
 	att_date=att_date_time[:10]
-	att_time=att_date_time[12:]
+	att_time=att_date_time[11:]
 	check_in.att_date=att_date
 	check_in.att_time = att_time
 	check_in.status=status
