@@ -369,7 +369,7 @@ def run_nighlty_job():
 #manual run
 @frappe.whitelist(allow_guest=True)
 def run_job(start_date,end_date):
-    try:
+	try:
 		send_only_failure_emails=cint(frappe.db.get_value("Attendance Processor", None, "send_only_failure_emails"))
 		att_log = frappe.new_doc("Attendance Log")
 		att_log.run_on = frappe.utils.now()
