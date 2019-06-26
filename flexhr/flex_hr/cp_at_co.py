@@ -152,7 +152,7 @@ def get_late_checkin_penalty(shift_type,emp_in_time):
 	penalty_in_mins=0
 	late_checkin_deduction_based_on=shift_type.get("late_checkin_deduction_based_on")
 	if late_checkin_deduction_based_on =='Late Checkin Deduction Rules':
-    		for condition in shift_type.get("late_checkin_deduction_rules"):
+			for condition in shift_type.get("late_checkin_deduction_rules"):
 				if emp_in_time >= condition.from_time and emp_in_time <= condition.to_time:
 					penalty_in_mins=condition.penalty
 					return penalty_in_mins

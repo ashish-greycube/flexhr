@@ -410,7 +410,6 @@ def run_job(start_date,end_date):
 		send_only_failure_emails=cint(frappe.db.get_value("Attendance Processor", None, "send_only_failure_emails"))
 		review_count=0
 		att_log = frappe.new_doc("Attendance Log")
-		print att_log.name
 		att_log.run_on = frappe.utils.now()
 		att_log.from_date=start_date
 		att_log.to_date=end_date
@@ -433,12 +432,10 @@ def run_job(start_date,end_date):
 		process_status=att_log.run_status
 		att_log.save(ignore_permissions=True)
 		att_log.submit()
-		print review_count
 
 		if review_count>0:
 			process_status='Fail'
 		if (send_only_failure_emails==1 and process_status=='Fail') or (send_only_failure_emails==0):
-			print process_status
 			notify_errors(err_msg,att_log.name,process_status)
 		frappe.db.set_value('Attendance Processor', 'Attendance Processor', 'last_run_on', now_datetime())
 		frappe.db.set_value('Attendance Processor', 'Attendance Processor', 'attendance_log', att_log.name)
@@ -463,12 +460,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 				emp_wo_att_count=emp_wo_attendance(dt)
 				per_of_emp_absent=(flt(emp_wo_att_count)/flt(total_emp_count))*100
 				per_of_emp_absent = 100 if per_of_emp_absent==0.0 else flt(per_of_emp_absent,2)
-				print 'emp_wo_att_count'
-				print emp_wo_att_count
-				print 'total_emp_count'
-				print total_emp_count
-				print 'per_of_emp_present'
-				print per_of_emp_absent
 				if (per_of_emp_absent)>50:
 					frappe.throw(_("{0} is working day. Device has missing data for {1} % of employee and hence cann't run. Total Employee are {2}. Absent Employee are {3}").format(dt,per_of_emp_absent,total_emp_count,emp_wo_att_count))	
 
@@ -495,10 +486,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 
 
 
-				print 'emp_att_date'
-				print emp_att_date
-				print 'att_detail'
-				print att_detail
 
 				review=0
 				reviewer=None
@@ -568,10 +555,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 
 					if leave_detail!=None:
 					# Leave is there
-						print 'half-day'
-						print half_day_date
-						print getdate(dt)
-						print getdate(half_day_date)
 						if half_day_date!=None and getdate(dt)==getdate(half_day_date):
 							#There is leave with half day and it matches current date
 							remark=_('Half-day '+leave_name+ ' on '+ str(half_day_date)+ ' So, no processing')
@@ -693,11 +676,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 									reviewer='Admin'
 									review_count +=1
 									admin_review_count +=1
-				print emp_name
-				print 'emp_in_time'
-				print emp_in_time
-				print 'emp_out_time'
-				print emp_out_time
 				if emp_in_time == None:
 					emp_in_time=""
 				if emp_out_time == None:
@@ -710,21 +688,15 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 				}
 				attedance_record=get_existing_attendance_detail(emp_id,dt)
 				if attedance_record:
-					print attedance_record['name']
 					att_log_entry['att']=attedance_record['name']
 				leave_record=get_leave_of_employee(emp_name,dt,status='Approved', docstatus=1)
 				if leave_record:
-					print leave_record['leave_name']
 					att_log_entry['leave']=leave_record['leave_name']
 				if 'att_req' in locals():
-					print att_req
 					att_log_entry['att_req']=att_req
-				print remark
-				print review
 				att_log_entry['remark']=remark
 				att_log_entry['review']=review
 				att_log_entry['reviewer']=reviewer
-				print '------------'
 
 				att_log.append("att_log_entry",att_log_entry)
 				#Reset all variables
@@ -755,7 +727,6 @@ def notify_employee(emp_id,args):
 	template='Attendance Reconciliation Information'
 	email_template = frappe.get_doc("Email Template", template)
 	message = frappe.render_template(email_template.response, args)
-	print message
 	notify({
 		# for post in messages
 		"message": message,
@@ -773,7 +744,6 @@ def notify_leave_approver(leave_approver,args):
 		template='Attendance Reconciliation Request'
 		email_template = frappe.get_doc("Email Template", template)
 		message = frappe.render_template(email_template.response, args)
-		print message
 		notify({
 			# for post in messages
 			"message": message,
@@ -808,10 +778,7 @@ def notify(args):
 
 def notify_errors(exceptions,att_log,status):
 	
-	print att_log
 	att_log_url = get_url_to_form("Attendance Log",att_log)
-	print att_log_url
-	print exceptions
 	subject = "[Important] [ERPNext] Auto Attendance System Error"
 	if status=='Fail' and exceptions!=None:
 		content = """Dear System Manager,
@@ -877,10 +844,8 @@ def validate_employee_leave_on_salary_boundary(salary_start_date,salary_end_date
 @frappe.whitelist(allow_guest=True)
 def split_multiple_leaves(salary_start_date,salary_end_date):
 	leaves_on_payroll_boundary=validate_employee_leave_on_salary_boundary(salary_start_date,salary_end_date)
-	print leaves_on_payroll_boundary
 	if len(leaves_on_payroll_boundary)>0:
 		for leave in leaves_on_payroll_boundary:
-			print leave['name'],salary_end_date
 			split_leave(leave['name'],salary_end_date,split_type='two_part')
 	return validate_employee_leave_on_salary_boundary(salary_start_date,salary_end_date)
 
@@ -897,11 +862,8 @@ def shorten_leave(leave_name,split_date,present_status):
 				first_half_day=leave.half_day
 				first_half_day_date=leave.half_day_date
 		first_total_leave_days = get_number_of_leave_days(leave.employee, leave.leave_type,first_start_date,first_end_date,first_half_day,first_half_day_date)
-		print first_total_leave_days
-		print 'first_total_leave_days'
 		if first_total_leave_days>0:
 			leave.db_set('description', 'cancelled by system as employee is turned up during leave period')
-			print 'cancelled by system as employee is turned up during leave period'
 			leave.flags.ignore_validate = True
 			leave.cancel()
 		if (first_total_leave_days > 0):
@@ -993,8 +955,6 @@ def get_leave_with_missing_attendance(date):
 
 def create_att_for_leave(date):
 	att_req=get_leave_with_missing_attendance(date)
-	print 'att_req'
-	print att_req
 	if att_req:
 		for att in att_req:
 			#date = dt.strftime("%Y-%m-%d")
