@@ -57,7 +57,6 @@ def create_checkin_record(att_type,stgid,att_date,att_time,userid,auth_token,emp
 	check_in.save(ignore_permissions=True)
 	if status=='Pass' or (status=='Fail' and remark == 'Employee Not Active. Left'):
 		check_in.submit()
-	print check_in.name
 
 	# def validate_attendance_user_id(self):
 	# 	emp_id = frappe.db.sql("""select 

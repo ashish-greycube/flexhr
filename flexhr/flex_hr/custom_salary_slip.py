@@ -68,7 +68,6 @@ def create_lwp_component(self,method):
         if amount_fhr_depends_on_absent>0:
            # Cancel existing absent additional salary
             additional_salary_list = frappe.get_list("Additional Salary",{'employee': self.employee,'docstatus':1, 'salary_component': salary_component_absent,'payroll_date': ('between', [self.start_date, self.end_date])})
-            print additional_salary_list
             if additional_salary_list:
                 for additional_salary in additional_salary_list:
                     print additional_salary

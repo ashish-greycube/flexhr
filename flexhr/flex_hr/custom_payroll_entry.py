@@ -59,7 +59,6 @@ def make_accrual_jv_entry(self):
         for ss in salary_slips:
             print('custome--custome-----custome------------------------make_accrual_jv_entry----------')
             print(ss.employee)
-            print ss.name
             employee_payroll_cost_center=None
             employee_payroll_cost_center=frappe.get_value('Employee', ss.employee, 'employee_payroll_cost_center')
             if employee_payroll_cost_center is None:

@@ -68,7 +68,6 @@ def create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,rem
 	check_in.save(ignore_permissions=True)
 	if status=='Pass' or (status=='Fail' and remark == 'Employee Not Active. Left'):
 		check_in.submit()
-	print check_in.name
 
 
 #Nightly run related functions

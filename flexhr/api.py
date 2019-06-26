@@ -58,8 +58,6 @@ def validate_if_holiday_or_leave(self,attendance_date) :
         leave_record = frappe.db.sql("""select half_day from `tabLeave Application`
                 where employee = %s and %s between from_date and to_date
                 and docstatus = 1""", (self.employee, attendance_date), as_dict=True)
-        print 'leave_record'
-        print leave_record
         if leave_record:
                 frappe.throw(_("Attendance not submitted for {0} as {1} on leave.").format(attendance_date, self.employee))
                 return False

@@ -78,7 +78,6 @@ class AdditionalSalaryEntry(Document):
 		"""
 		cond = self.get_filter_condition()
 		cond += self.get_joining_releiving_condition()
-		print cond
 		#condition = 'order by modified desc LIMIT 1'
 		condition = ''
 		if self.payroll_frequency:
