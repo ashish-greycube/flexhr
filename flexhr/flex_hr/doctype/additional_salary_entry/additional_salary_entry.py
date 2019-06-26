@@ -82,7 +82,6 @@ class AdditionalSalaryEntry(Document):
 		condition = ''
 		if self.payroll_frequency:
 			condition = """and SS.payroll_frequency = '%(payroll_frequency)s'"""% {"payroll_frequency": self.payroll_frequency}
-		print 'inside get_emp_list'
 		# is_included_for_delay_and_overtime flag check at child table i.e. salary detail level
 		sal_struct = frappe.db.sql_list("""
 				select distinct(SS.name)  from `tabSalary Structure` SS
@@ -112,8 +111,6 @@ class AdditionalSalaryEntry(Document):
 		# 				and SS.company = %(company)s 
 		# 			{condition}""".format(condition=condition),
 		# 		{"company": self.company})
-		print 'sal_struct'
-		print sal_struct
 		if sal_struct:
 
 			# cond += "and t2.salary_structure IN %(sal_struct)s "
@@ -136,7 +133,6 @@ class AdditionalSalaryEntry(Document):
 			# single ss only
 			cond += "and t2.salary_structure IN %(sal_struct)s "
 			cond += "and %(from_date)s >= t2.from_date and not exists (	select 1 from `tabSalary Structure Assignment` t3 where t3.name <> t2.name	and t3.employee = t2.employee and t3.from_date > t2.from_date and   %(from_date)s >=t3.from_date )	order by t2.from_date desc"
-			print cond
 			emp_list = frappe.db.sql("""
 				select t1.name as employee, t1.employee_name, t1.department, t1.designation,
 					t2.salary_structure, t2.base
@@ -146,8 +142,6 @@ class AdditionalSalaryEntry(Document):
     				and t1.name = t2.employee
 					%s
 			""" % cond, {"sal_struct": tuple(sal_struct), "from_date": self.end_date}, as_dict=True)	
-			print 'emp_list'
-			print emp_list
 			return emp_list
 
 	def create_additional_salary_slips(self):
@@ -186,8 +180,6 @@ class AdditionalSalaryEntry(Document):
 			result= get_attendance_details(d.employee,self.start_date,self.end_date)
 			if result != None:
 				delay_amount,ot_amount=calculate_component_amounts(d.employee,self.company,d.salary_structure,d.base,result.late_checkin,result.early_checkout,result.overtime,self.start_date)
-				print 'attendance'
-				print d.employee,d.salary_structure
 				ans={
 					'employee':d.employee,
 					'late_checkin':result.late_checkin,
@@ -205,8 +197,6 @@ class AdditionalSalaryEntry(Document):
 			if result != None:
 				delay_amount,ot_amount=calculate_component_amounts(d.employee,self.company,d.salary_structure,d.base,result.late_checkin,result.early_checkout,result.overtime,self.start_date)
 			if result != None:
-				print 'OT application'
-				print d.employee,d.salary_structure
 				ans={
 					'employee':d.employee,
 					'late_checkin':result.late_checkin,

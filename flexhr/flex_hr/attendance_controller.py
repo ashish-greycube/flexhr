@@ -415,7 +415,6 @@ def run_job(start_date,end_date):
 		send_only_failure_emails=cint(frappe.db.get_value("Attendance Processor", None, "send_only_failure_emails"))
 		review_count=0
 		att_log = frappe.new_doc("Attendance Log")
-		print att_log.name
 		att_log.run_on = frappe.utils.now()
 		att_log.from_date=start_date
 		att_log.to_date=end_date
@@ -438,12 +437,10 @@ def run_job(start_date,end_date):
 		process_status=att_log.run_status
 		att_log.save(ignore_permissions=True)
 		att_log.submit()
-		print review_count
 
 		if review_count>0:
 			process_status='Fail'
 		if (send_only_failure_emails==1 and process_status=='Fail') or (send_only_failure_emails==0):
-			print process_status
 			att_log_url = get_url_to_form("Attendance Log",att_log.name)
 			args={
 				"run_on":att_log.run_on,
@@ -481,12 +478,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 				emp_wo_att_count=emp_wo_attendance(dt)
 				per_of_emp_present=((flt(total_emp_count)-flt(emp_wo_att_count))/flt(total_emp_count))*100
 				per_of_emp_present = flt(per_of_emp_present,2)
-				print 'emp_wo_att_count'
-				print emp_wo_att_count
-				print 'total_emp_count'
-				print total_emp_count
-				print 'per_of_emp_present'
-				print per_of_emp_present
 				if (per_of_emp_present)<51:
 					frappe.throw(_("{0} is working day. Device shows data for {1} % of employees. It should be more than 50% and hence cann't run. \n Total Employee are {2}. Absent Employee are {3}").format(dt,per_of_emp_present,total_emp_count,emp_wo_att_count))	
 
@@ -513,10 +504,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 
 
 
-				print 'emp_att_date'
-				print emp_att_date
-				print 'att_detail'
-				print att_detail
 
 				review=0
 				reviewer=None
@@ -587,10 +574,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 
 					if leave_detail!=None:
 					# Leave is there
-						print 'half-day'
-						print half_day_date
-						print getdate(dt)
-						print getdate(half_day_date)
 						if half_day_date!=None and getdate(dt)==getdate(half_day_date):
 							#There is leave with half day and it matches current date
 							remark=_('Half-day '+leave_name+ ' on '+ formatdate(half_day_date)+ ' So, no processing')
@@ -601,7 +584,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 								remark=_('Absent & existing '+leave_name)
 							elif present_status=='full':
 								shorten_status,new_shorten_leave=shorten_leave(leave_name,dt,'full')
-								print shorten_status
 								att_name=create_attendance(emp_id,dt,emp_in_time,emp_out_time,duration,shift_start_time,shift_end_time,shift_type,late_checkin_mins,early_checkout_mins,applicable_ot_mins,status=status)
 								if new_shorten_leave!=None:
 									remark=_(att_name+' present created & existing '+leave_name+' is cancelled & new shortened '+ new_shorten_leave+' created')
@@ -616,9 +598,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 									remark=_('Re-run. Emp is '+present_status.capitalize()+' present. Request: '+att_req +' exist for '+leave_name)
 								else:
 									shorten_status,new_shorten_leave=shorten_leave(leave_name,dt,'partial')
-									print 'new_shorten_leave'
-									print shorten_status
-									print new_shorten_leave
 									if shorten_status=='shortened':
 										description =present_status.capitalize()+' presence on '+dt+' In: '+str(emp_in_time)+' and Out: '+str(emp_out_time)+ '\n system created LWP'
 										delete_draft_status_leave(emp_name,dt,docstatus=0)
@@ -734,11 +713,6 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 									reviewer='Admin'
 									review_count +=1
 									admin_review_count +=1
-				print emp_name
-				print 'emp_in_time'
-				print emp_in_time
-				print 'emp_out_time'
-				print emp_out_time
 				if emp_in_time == None:
 					emp_in_time=""
 				if emp_out_time == None:
@@ -751,21 +725,15 @@ def process_employee_checkin_records(start_date, end_date,att_log):
 				}
 				attedance_record=get_existing_attendance_detail(emp_id,dt)
 				if attedance_record:
-					print attedance_record['name']
 					att_log_entry['att']=attedance_record['name']
 				leave_record=get_leave_of_employee(emp_name,dt,status='Approved', docstatus=1)
 				if leave_record:
-					print leave_record['leave_name']
 					att_log_entry['leave']=leave_record['leave_name']
 				if 'att_req' in locals():
-					print att_req
 					att_log_entry['att_req']=att_req
-				print remark
-				print review
 				att_log_entry['remark']=remark
 				att_log_entry['review']=review
 				att_log_entry['reviewer']=reviewer
-				print '------------'
 
 				if review==1:
 					att_log.append("att_log_entry_fail",att_log_entry)
@@ -799,7 +767,6 @@ def notify_employee(emp_id,args):
 	template='Attendance Reconciliation Information'
 	email_template = frappe.get_doc("Email Template", template)
 	message = frappe.render_template(email_template.response, args)
-	print message
 	notify({
 		# for post in messages
 		"message": message,
@@ -817,7 +784,6 @@ def notify_leave_approver(leave_approver,args):
 		template='Attendance Reconciliation Request'
 		email_template = frappe.get_doc("Email Template", template)
 		message = frappe.render_template(email_template.response, args)
-		print message
 		notify({
 			# for post in messages
 			"message": message,
@@ -837,9 +803,6 @@ def notify(args):
 	sender      	    = dict()
 	sender['email']     = frappe.get_doc('User', frappe.session.user).email
 	sender['full_name'] = frappe.utils.get_fullname(sender['email'])
-	print sender['email']
-	print contact
-	print args.subject
 
 	try:
 		frappe.sendmail(
@@ -859,8 +822,6 @@ def notify_auto_attendance_nightly_job_status(args):
 	nightly_job_notification_template = frappe.db.get_value("Attendance Processor", None, "nightly_job_notification_template")
 	email_template = frappe.get_doc("Email Template", nightly_job_notification_template)
 	message = frappe.render_template(email_template.response, args)
-	print message
-	print recipients
 	notify({
 		# for post in messages
 		"message": message,
@@ -871,10 +832,7 @@ def notify_auto_attendance_nightly_job_status(args):
 
 def notify_errors(exceptions,att_log,status):
 	
-	print att_log
 	att_log_url = get_url_to_form("Attendance Log",att_log)
-	print att_log_url
-	print exceptions
 	subject = "[Important] [ERPNext] Auto Attendance System Error"
 	if status=='Fail' and exceptions!=None:
 		content = """Dear System Manager,
@@ -940,10 +898,8 @@ def validate_employee_leave_on_salary_boundary(salary_start_date,salary_end_date
 @frappe.whitelist(allow_guest=True)
 def split_multiple_leaves(salary_start_date,salary_end_date):
 	leaves_on_payroll_boundary=validate_employee_leave_on_salary_boundary(salary_start_date,salary_end_date)
-	print leaves_on_payroll_boundary
 	if len(leaves_on_payroll_boundary)>0:
 		for leave in leaves_on_payroll_boundary:
-			print leave['name'],salary_end_date
 			split_leave(leave['name'],salary_end_date,split_type='two_part')
 	return validate_employee_leave_on_salary_boundary(salary_start_date,salary_end_date)
 
@@ -1034,32 +990,26 @@ def shorten_leave1(leave_name,split_date,present_status):
 				first_half_day=leave.half_day
 				first_half_day_date=leave.half_day_date
 		first_total_leave_days = get_number_of_leave_days(leave.employee, leave.leave_type,first_start_date,first_end_date,first_half_day,first_half_day_date)
-		print first_total_leave_days
-		print 'first_total_leave_days'
 		present_on=cstr(add_days(cstr(getdate(split_date)), 1))
 		if (first_total_leave_days==0 and present_status=='full'):
 			leave.db_set('description', _('Cancelled by system as employee has fully turned up during leave period on '+present_on+', No leave created'))
-			print 'cancelled by system as employee is turned up during leave period'
 			#leave.flags.ignore_validate = True
 			leave.db_set('status','Cancelled')
 			leave.cancel()
 
 		if first_total_leave_days>0 and present_status=='full':
 			leave.db_set('description', _('Cancelled by system as employee has fully turned up on '+present_on+ ' In lieu, new shortened leave was created'))
-			print 'cancelled by system as employee is turned up during leave period'
 			#leave.flags.ignore_validate = True
 			leave.db_set('status','Cancelled')
 			leave.cancel()
 		if (first_total_leave_days>0 and present_status=='partial'):
 			leave.db_set('description', _('Cancelled by system as employee has partially turned up on '+present_on+ ' In lieu, new shortened leave was created'))
-			print 'cancelled by system as employee is turned up during leave period'
 			#leave.flags.ignore_validate = True
 			leave.db_set('status','Cancelled')
 			leave.cancel()
 		if (first_total_leave_days==0 and present_status=='partial' and getdate(first_start_date)==getdate(present_on)):
 		#Employee partially turns up on first day of leave period
 			leave.db_set('description', _('Cancelled by system as employee has partially turned up on '+present_on+ ' Existing leave is cancelled as turned up on first date'))
-			print 'cancelled by system as employee is turned up during leave period'
 			#leave.flags.ignore_validate = True
 			leave.db_set('status','Cancelled')
 			leave.cancel()
@@ -1153,8 +1103,6 @@ def get_leave_with_missing_attendance(date):
 
 def create_att_for_leave(date):
 	att_req=get_leave_with_missing_attendance(date)
-	print 'att_req'
-	print att_req
 	if att_req:
 		for att in att_req:
 			#date = dt.strftime("%Y-%m-%d")

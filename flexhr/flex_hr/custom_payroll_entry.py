@@ -57,8 +57,6 @@ def make_accrual_jv_entry(self):
     salary_slips = get_sal_slip_list_with_employee(self,ss_status = 1, as_dict = True)
     if salary_slips:
         for ss in salary_slips:
-            print('custome--custome-----custome------------------------make_accrual_jv_entry----------')
-            print(ss.employee)
             employee_payroll_cost_center=None
             employee_payroll_cost_center=frappe.get_value('Employee', ss.employee, 'employee_payroll_cost_center')
             if employee_payroll_cost_center is None:
@@ -86,11 +84,7 @@ def make_accrual_jv_entry(self):
 
                 # Earnings
                 for acc, amount in earnings.items():
-                    print acc
-                    print ss.employee
                     party=ss.employee
-                    print party
-                    print '-----------------------'
                     payable_amount += flt(amount, precision)
                     accounts.append({
                             "account": acc,
@@ -138,13 +132,9 @@ def make_accrual_jv_entry(self):
                     "cost_center": employee_payroll_cost_center,
                     "project": self.project
                 })
-                print accounts
                 journal_entry.set("accounts", accounts)
                 journal_entry.title = default_payroll_payable_account + '-'+str(party)
                 journal_entry.save()
-                print 'jjjjjjjjjjjjjjjjjjjj'
-                print journal_entry.name
-                print journal_entry.as_json()
 
                 try:
                     journal_entry.submit()
@@ -156,7 +146,6 @@ def make_accrual_jv_entry(self):
         return jv_name
 
 def make_payment_entry(self):
-    print('----------------inside custom------------------------------')
     self.check_permission('write')
 
     cond = self.get_filter_condition()
@@ -220,14 +209,10 @@ def create_journal_entry_each_emp(self, je_payment_amount, user_remark,party):
             "cost_center": employee_payroll_cost_center,
         }
     ])
-    print journal_entry.as_json()
     journal_entry.save(ignore_permissions = True)
 
 def create_custom_jv(self,method):
     # import types
     # self.make_accrual_jv_entry_1 = types.MethodType(make_accrual_jv_entry_1, self, PayrollEntry)
-    print('-----------------module --custom----------------------------------------------------------------------------------')
-    print(method)
-    print('inside moduel..build my things----')
     PayrollEntry.make_accrual_jv_entry = make_accrual_jv_entry
     PayrollEntry.make_payment_entry = make_payment_entry

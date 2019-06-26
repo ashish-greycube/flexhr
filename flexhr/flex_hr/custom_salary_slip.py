@@ -50,9 +50,6 @@ def calculate_lwp_net_pay(self):
     return amount_fhr_depends_on_absent
 
 def create_lwp_component(self,method):
-    print('custom ss----------------------------------------------------')
-    print(method)
-    print('custom ss----------------------------------------------------')
     company = get_default_company()
     salary_component_absent=frappe.get_value('Company', company, 'fhr_absent_component')
 
@@ -70,7 +67,6 @@ def create_lwp_component(self,method):
             additional_salary_list = frappe.get_list("Additional Salary",{'employee': self.employee,'docstatus':1, 'salary_component': salary_component_absent,'payroll_date': ('between', [self.start_date, self.end_date])})
             if additional_salary_list:
                 for additional_salary in additional_salary_list:
-                    print additional_salary
                     attendance_obj = frappe.get_doc("Additional Salary", additional_salary['name'])
                     attendance_obj.cancel()            
             # create new additional salary
