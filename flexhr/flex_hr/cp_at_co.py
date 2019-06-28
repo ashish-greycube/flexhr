@@ -392,7 +392,7 @@ def run_job(start_date,end_date):
 		frappe.db.set_value('Attendance Processor', 'Attendance Processor', 'last_run_on', now_datetime())
 		frappe.db.set_value('Attendance Processor', 'Attendance Processor', 'attendance_log', att_log.name)
 		return 		
-    except Exception:
+	except Exception:
 		err_msg= frappe.get_traceback()
 		att_log.run_status = 'Fail'
 		att_log.review_count=1
