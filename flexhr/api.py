@@ -106,3 +106,9 @@ def get_number_of_leave_days(employee, leave_type, from_date, to_date, half_day 
 	if not frappe.db.get_value("Leave Type", leave_type, "include_holiday"):
 		number_of_days = flt(number_of_days) - flt(get_holidays(employee, from_date, to_date))
 	return number_of_days
+
+@frappe.whitelist()
+def before_install():
+        # import email templates
+	from frappe.core.doctype.data_import.data_import import import_file_by_path
+	import_file_by_path(path=frappe.utils.get_bench_path()+'/apps/flexhr/flexhr/public/email_template/Email_Template.csv',ignore_links=False, overwrite=True,submit=False, pre_process=None, no_email=True)
