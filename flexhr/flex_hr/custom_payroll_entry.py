@@ -49,7 +49,7 @@ def get_loan_details_each_emp(self,ss_name):
         from
             `tabSalary Slip` t1, `tabSalary Slip Loan` eld
         where
-            t1.docstatus = 1 and t1.name = eld.parent and start_date >= %s and end_date <= %s %s
+            t1.docstatus = 1 and t1.name = eld.parent and t1.start_date >= %s and t1.end_date <= %s %s
         """ % ('%s', '%s', cond), (self.start_date, self.end_date), as_dict=True) or []
 
 def make_accrual_jv_entry(self):
