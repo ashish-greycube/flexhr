@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-from erpnext.hr.doctype.payroll_entry.payroll_entry import PayrollEntry
+
 from frappe.utils import cint, flt, nowdate, add_days, getdate, fmt_money, add_to_date, DATE_FORMAT, date_diff
 
 def get_sal_slip_list_with_employee(self, ss_status, as_dict=False):
@@ -122,7 +122,6 @@ def make_accrual_jv_entry(self):
                             "project": self.project
                         })
                     payable_amount -= flt(data.total_payment, precision)
-
                 # Payable amount
                 accounts.append({
                     "account": default_payroll_payable_account,
@@ -170,6 +169,8 @@ def make_payment_entry(self):
                 statistical_component = frappe.db.get_value("Salary Component", sal_detail.salary_component, 'statistical_component')
                 if statistical_component != 1:
                     salary_slip_total -= sal_detail.amount
+            if salary_slip.total_loan_repayment:
+                salary_slip_total -= salary_slip.total_loan_repayment
             if salary_slip_total > 0:
                 create_journal_entry_each_emp(self,salary_slip_total, "salary",salary_slip_name[1])
 
@@ -212,7 +213,8 @@ def create_journal_entry_each_emp(self, je_payment_amount, user_remark,party):
     journal_entry.save(ignore_permissions = True)
 
 def create_custom_jv(self,method):
-    # import types
-    # self.make_accrual_jv_entry_1 = types.MethodType(make_accrual_jv_entry_1, self, PayrollEntry)
-    PayrollEntry.make_accrual_jv_entry = make_accrual_jv_entry
-    PayrollEntry.make_payment_entry = make_payment_entry
+    from erpnext.hr.doctype.payroll_entry.payroll_entry import PayrollEntry
+    setattr(PayrollEntry, 'make_accrual_jv_entry', make_accrual_jv_entry)
+    setattr(PayrollEntry, 'make_payment_entry', make_payment_entry)
+    # PayrollEntry.make_accrual_jv_entry = make_accrual_jv_entry
+    # PayrollEntry.make_payment_entry = make_payment_entry

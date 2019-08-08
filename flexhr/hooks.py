@@ -100,7 +100,7 @@ doc_events = {
 	},
 	"Payroll Entry": {
 		"onload": "flexhr.flex_hr.custom_payroll_entry.create_custom_jv",
-		"on_change":"flexhr.flex_hr.custom_payroll_entry.create_custom_jv"
+		"on_update_after_submit":"flexhr.flex_hr.custom_payroll_entry.create_custom_jv"
 	},
 }
 
