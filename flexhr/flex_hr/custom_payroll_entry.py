@@ -13,6 +13,7 @@ def get_sal_slip_list_with_employee(self, ss_status, as_dict=False):
         select t1.name, t1.salary_structure ,t1.employee,t1.employee_name
         from `tabSalary Slip` t1
         where t1.docstatus = %s and t1.start_date >= %s and t1.end_date <= %s
+        and t1.net_pay > 0
         and (t1.journal_entry is null or t1.journal_entry = "") and ifnull(salary_slip_based_on_timesheet,0) = %s %s
     """ % ('%s', '%s', '%s','%s', cond), (ss_status, self.start_date, self.end_date, self.salary_slip_based_on_timesheet), as_dict=as_dict)
     return ss_list
