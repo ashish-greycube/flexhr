@@ -206,7 +206,8 @@ def get_shift_detail_of_employee(employee, date):
 		inner join `tabShift Type`as shift_type
 		on shift_assign.shift_type = shift_type.name
 		where emp.employee=%s
-		and shift_assign.date=%s""",(employee, date), as_dict=1)
+		and shift_assign.date<=%s
+		order by shift_assign.date desc limit 1""",(employee, date), as_dict=1)
 
 	if shift:
 		shift_type=shift[0]["shift_type"]
@@ -225,7 +226,11 @@ def get_shift_detail_of_employee(employee, date):
 	from
 	 `tabShift Type`
 	where {condition_str}""".format(condition_str=condition_str),as_dict=1)
-	return shift[0]
+	
+	if not shift:
+		frappe.throw(_("No Shift assigned for employee : {0} for date : {1} \n Also No default shift type found.").format(employee,formatdate(date)))
+	else:
+		return shift[0]
 
 def calculate_overtime(shift_type,emp_out_time):
 	shift_type = frappe.get_doc("Shift Type", shift_type)
