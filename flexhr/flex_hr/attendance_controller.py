@@ -10,7 +10,30 @@ from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff,
 
 # Attendance device related functions
 @frappe.whitelist(allow_guest=True)
-def punch_in(att_type,stgid,att_time,userid,auth_token=None):
+def punch_in(request_data):
+	json_request=frappe.parse_json(request_data)
+	api_request=json_request.get('ApiRequestInfo')
+	auth_token=api_request.get('AuthToken')
+	stgid=json_request.get('ServiceTagId')
+	att_type_v2=api_request.get('OperationData').get('AttendanceType')
+	if att_type_v2=='CheckIn':
+		att_type='in'
+	elif att_type_v2=='CheckOut':
+		att_type='out'
+	att_time=api_request.get('OperationTime')
+	userid=api_request.get('UserId')
+	_punch_in(att_type,stgid,att_time,userid,auth_token)
+
+def standard_response():
+	import json
+	done={"status": "done"}
+	response=json.dumps(done)
+	print(response)
+	return response
+
+# v 1.0 punch in
+@frappe.whitelist(allow_guest=True)
+def _punch_in(att_type,stgid,att_time,userid,auth_token=None):
 	employee = frappe.get_value('Employee', {'attendance_user_id': userid}, "name")
 	if auth_token:
 		if auth_token != frappe.db.get_single_value("Attendance Device Settings", "auth_token"):
@@ -44,7 +67,8 @@ def punch_in(att_type,stgid,att_time,userid,auth_token=None):
 		create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
 		return standard_response()
 
-def standard_response():
+# v 1.0 response
+def __standard_response():
 	response = Response()
 	response.mimetype = 'text/plain'
 	response.charset = 'utf-8'
