@@ -9,31 +9,11 @@ from frappe.utils import get_url_to_form,formatdate,split_emails
 from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff, money_in_words,time_diff_in_seconds,today,now_datetime
 
 # Attendance device related functions
-@frappe.whitelist(allow_guest=True)
-def punch_in(request_data):
-	json_request=frappe.parse_json(request_data)
-	api_request=json_request.get('ApiRequestInfo')
-	auth_token=api_request.get('AuthToken')
-	stgid=json_request.get('ServiceTagId')
-	att_type_v2=api_request.get('OperationData').get('AttendanceType')
-	if att_type_v2=='CheckIn':
-		att_type='in'
-	elif att_type_v2=='CheckOut':
-		att_type='out'
-	att_time=api_request.get('OperationTime')
-	userid=api_request.get('UserId')
-	_punch_in(att_type,stgid,att_time,userid,auth_token)
 
-def standard_response():
-	import json
-	done={"status": "done"}
-	response=json.dumps(done)
-	print(response)
-	return response
-
-# v 1.0 punch in
+# v1.0 -- depending on version comment / uncomment punch_in function
+# Line 15 to 48
 @frappe.whitelist(allow_guest=True)
-def _punch_in(att_type,stgid,att_time,userid,auth_token=None):
+def punch_in(att_type,stgid,att_time,userid,auth_token=None):
 	employee = frappe.get_value('Employee', {'attendance_user_id': userid}, "name")
 	if auth_token:
 		if auth_token != frappe.db.get_single_value("Attendance Device Settings", "auth_token"):
@@ -67,13 +47,76 @@ def _punch_in(att_type,stgid,att_time,userid,auth_token=None):
 		create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
 		return standard_response()
 
-# v 1.0 response
-def __standard_response():
+# v2.0 -- depending on version comment / uncomment punch_in function
+# Line 52 to 65
+# @frappe.whitelist(allow_guest=True)
+# def punch_in(request_data):
+# 	json_request=frappe.parse_json(request_data)
+# 	api_request=json_request.get('ApiRequestInfo')
+# 	auth_token=api_request.get('AuthToken')
+# 	stgid=json_request.get('ServiceTagId')
+# 	att_type_v2=api_request.get('OperationData').get('AttendanceType')
+# 	if att_type_v2=='CheckIn':
+# 		att_type='in'
+# 	elif att_type_v2=='CheckOut':
+# 		att_type='out'
+# 	att_time=api_request.get('OperationTime')
+# 	userid=api_request.get('UserId')
+# 	punch_in_for_v2(att_type,stgid,att_time,userid,auth_token)
+
+def standard_response():
 	response = Response()
 	response.mimetype = 'text/plain'
 	response.charset = 'utf-8'
 	response.data = 'OK'
 	return response
+
+def standard_response_for_v2():
+	from frappe.utils.response import json_handler
+	from werkzeug.wrappers import Response
+	response=Response()
+	response.mimetype = 'application/json'
+	response.charset = 'utf-8'
+	json_response={}
+	json_response.update({
+		"status": "done"
+	})
+	response.data=json.dumps(json_response, default=json_handler, separators=(',',':'))
+	return response
+
+def punch_in_for_v2(att_type,stgid,att_time,userid,auth_token=None):
+	employee = frappe.get_value('Employee', {'attendance_user_id': userid}, "name")
+	if auth_token:
+		if auth_token != frappe.db.get_single_value("Attendance Device Settings", "auth_token"):
+			remark = "Authorization Token Doesn't Match"
+			status = 'Fail'
+			create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
+			return standard_response_for_v2()
+		else:
+			if employee:
+				employee_doc = frappe.get_doc("Employee", employee)
+				if employee_doc.status == 'Left':
+					remark = 'Employee Not Active. Left'
+					status = 'Fail'
+					create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
+					return standard_response_for_v2()
+				else:
+					remark = ''
+					status = 'Pass'
+					create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
+					return standard_response_for_v2()
+			else:
+				remark = "Attendance Userid Doesn't Match With Any Employee"
+				status = 'Fail'
+				employee=None
+				create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
+				return standard_response_for_v2()
+	else:
+		remark = 'Authorization Token Not Found'
+		status = 'Fail'
+		auth_token=None
+		create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status)
+		return standard_response_for_v2()
 
 def create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,remark,status):
 	check_in = frappe.new_doc("Employee Checkin")
