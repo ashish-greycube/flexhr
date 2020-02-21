@@ -50,7 +50,7 @@ from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff,
 # v2.0 -- depending on version comment / uncomment punch_in function
 # Line 52 to 65
 @frappe.whitelist(allow_guest=True)
-def punch_in(request_data):
+def punch_in(**request_data):
 	#json_request=frappe.parse_json(request_data)
 	json_request=request_data
 	api_request=json_request.get('ApiRequestInfo')
