@@ -51,6 +51,7 @@ from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff,
 # Line 52 to 65
 @frappe.whitelist(allow_guest=True)
 def punch_in(request_data):
+	return standard_response_for_v2()
 	json_request=frappe.parse_json(request_data)
 	api_request=json_request.get('ApiRequestInfo')
 	auth_token=api_request.get('AuthToken')
@@ -72,6 +73,7 @@ def standard_response():
 	return response
 
 def standard_response_for_v2():
+	import json
 	from frappe.utils.response import json_handler
 	from werkzeug.wrappers import Response
 	response=Response()
