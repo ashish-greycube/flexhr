@@ -5,7 +5,7 @@ from werkzeug.wrappers import Response
 import datetime
 from erpnext.hr.doctype.employee.employee import is_holiday
 from erpnext.hr.doctype.leave_application.leave_application import get_number_of_leave_days,get_leave_approver
-from frappe.utils import get_url_to_form,formatdate,split_emails
+from frappe.utils import get_url_to_form,formatdate,split_emails,convert_utc_to_user_timezone
 from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff, money_in_words,time_diff_in_seconds,today,now_datetime
 
 # Attendance device related functions
@@ -50,7 +50,7 @@ from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff,
 # v2.0 -- depending on version comment / uncomment punch_in function
 # Line 52 to 65
 @frappe.whitelist(allow_guest=True)
-def punch_in(**request_data):
+def punch_in(request_data):
 	#json_request=frappe.parse_json(request_data)
 	json_request=request_data
 	api_request=json_request.get('ApiRequestInfo')
@@ -128,7 +128,8 @@ def create_checkin_record(att_type,stgid,att_time,userid,auth_token,employee,rem
 	check_in.device_id=stgid
 	check_in.auth_token=auth_token
 	check_in.att_type = att_type
-	att_date_time=datetime.datetime.fromtimestamp(float(att_time)).strftime("%Y-%m-%d %H:%M:%S")
+	att_date_time=convert_utc_to_user_timezone(datetime.datetime.fromtimestamp(float(att_time))).strftime("%Y-%m-%d %H:%M:%S")
+	print('att_date_time',att_date_time)
 	att_date=att_date_time[:10]
 	att_time=att_date_time[11:]
 	check_in.att_date=att_date
