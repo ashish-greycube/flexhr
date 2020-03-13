@@ -7,7 +7,7 @@ from erpnext.hr.doctype.employee.employee import is_holiday
 from erpnext.hr.doctype.leave_application.leave_application import get_number_of_leave_days,get_leave_approver
 from frappe.utils import get_url_to_form,formatdate,split_emails,convert_utc_to_user_timezone
 from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff, money_in_words,time_diff_in_seconds,today,now_datetime
-
+import json
 # Attendance device related functions
 
 # v1.0 -- depending on version comment / uncomment punch_in function
@@ -52,7 +52,7 @@ from frappe.utils import add_days, cint, cstr, flt, getdate, rounded, date_diff,
 @frappe.whitelist(allow_guest=True)
 def punch_in(**request_data):
 	#json_request=frappe.parse_json(request_data)
-	json_request=request_data
+	json_request=json.loads(frappe.form_dict.get("request_data"))
 	api_request=json_request.get('ApiRequestInfo')
 	auth_token=api_request.get('AuthToken')
 	stgid=json_request.get('ServiceTagId')
