@@ -41,8 +41,18 @@ def sum_components(self, component_type, total_field, precision,amount_fhr_depen
     return amount_fhr_depends_on_absent
 
 def calculate_lwp_net_pay(self):
+
+    # if self.salary_structure:
+    #     self.calculate_component_amounts()
+
     if self.salary_structure:
-        self.calculate_component_amounts()
+        self.calculate_component_amounts("earnings")
+    self.gross_pay = self.get_component_totals("earnings")
+
+    if self.salary_structure:
+        self.calculate_component_amounts("deductions")
+    self.total_deduction = self.get_component_totals("deductions")
+
     precision = frappe.defaults.get_global_default("currency_precision")
     self.gross_pay = 0
     amount_fhr_depends_on_absent=0
