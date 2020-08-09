@@ -19,6 +19,8 @@ def sum_components(self, component_type, total_field, precision,amount_fhr_depen
         if not getattr(self, '_salary_structure_doc', None):
             self._salary_structure_doc = frappe.get_doc('Salary Structure', self.salary_structure)
         data = SalarySlip.get_data_for_eval(self)
+        #make default zero
+        fhr_depends_on_absent=0
         for key in ('earnings', 'deductions'):
             for struct_row in self._salary_structure_doc.get(key):
                 if key=="earnings" and struct_row.fhr_depends_on_absent == 1:
