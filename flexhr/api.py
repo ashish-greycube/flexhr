@@ -69,6 +69,7 @@ def validate_if_holiday_or_leave(self,attendance_date) :
 
 
 @frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
 def default_leave_type_for_lwp(doctype, txt, searchfield, start, page_len, filters):
         # return frappe.get_list('Leave Type', filters={'docstatus': 0, 'is_lwp': 1}, fields=['name'], order_by='modified')
         return frappe.db.sql("""select name from `tabLeave Type`
