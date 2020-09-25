@@ -7,8 +7,8 @@ from erpnext.hr.doctype.employee.employee import is_holiday
 # Shift Type - functions
 def set_as_default(self,method):
 	if self.is_default:
-	frappe.db.sql("update `tabShift Type` set is_default=0 where name != %s",
-	self.name)
+		frappe.db.sql("update `tabShift Type` set is_default=0 where name != %s",
+		self.name)
 
 # Attendance Request - functions
 def validate_if_attendance_not_applicable_for_att_req(self,method):
