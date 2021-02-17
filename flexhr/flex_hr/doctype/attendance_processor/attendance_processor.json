@@ -41,6 +41,7 @@
    "label": "Override 50% Absent Check"
   },
   {
+   "default": "Auto Attendance Nightly Job Notification",
    "fieldname": "nightly_job_notification_template",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -81,7 +82,7 @@
   }
  ],
  "issingle": 1,
- "modified": "2021-02-17 18:53:31.569719",
+ "modified": "2021-02-17 19:38:05.943311",
  "modified_by": "Administrator",
  "module": "Flex HR",
  "name": "Attendance Processor",
