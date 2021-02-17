@@ -62,7 +62,7 @@ doctype_js = {
 # ------------
 
 # before_install = "flexhr.api.before_install"
-# after_install = "flexhr.install_fixtures.install_fixtures"
+before_install = "flexhr.install_fixtures.install_fixtures"
 # after_install = "flexhr.api.after_install"
 
 # Desk Notifications
@@ -138,15 +138,15 @@ scheduler_events = {
 # 	"frappe.desk.doctype.event.event.get_events": "flexhr.event.get_events"
 # }
 
-fixtures = [
-      {
-        "dt": "Email Template", 
-        "filters": [["name", "in", ["Auto Attendance Nightly Job Notification",
-"Overtime Approval Notification",
-"Overtime Status Notification",
-"Attendance Reconciliation Information",
-"Attendance Reconciliation Request"
-                    ]]]
-      }
-]
+# fixtures = [
+#       {
+#         "dt": "Email Template", 
+#         "filters": [["name", "in", ["Auto Attendance Nightly Job Notification",
+# "Overtime Approval Notification",
+# "Overtime Status Notification",
+# "Attendance Reconciliation Information",
+# "Attendance Reconciliation Request"
+#                     ]]]
+#       }
+# ]
 
