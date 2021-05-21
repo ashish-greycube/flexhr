@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.desk.page.setup_wizard.setup_wizard import make_records
+from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 
 def install_fixtures():
-    records = [
+	records = [
  {
   "docstatus": 0,
   "doctype": "Email Template",
@@ -45,5 +47,104 @@ def install_fixtures():
   "owner": "Administrator"
  }
 ]
-    
-    make_records(records)        
+	
+	make_records(records)        
+
+
+def create_company_fields():
+	company_field = {
+		"Company": [
+  {
+   "fieldname": "fhr_absent_component", 
+   "fieldtype": "Link", 
+   "insert_after": "fhr_overtime_component", 
+   "label": "Absent Component", 
+   "options": "Salary Component"
+  }, 
+  {
+   "fieldname": "fhr_overtime_component", 
+   "fieldtype": "Link", 
+   "insert_after": "fhr_delay_component", 
+   "label": "Overtime Component", 
+   "options": "Salary Component"
+  }, 
+  {
+   "fieldname": "fhr_delay_component", 
+   "fieldtype": "Link", 
+   "insert_after": "column_break_80", 
+   "label": "Delay Component", 
+   "options": "Salary Component", 
+  }, 
+  {
+   "default": "1.0", 
+   "description": "Overtime = Per Min Salary * Overtime Earning Factor", 
+   "fieldname": "overtime_earning_factor", 
+   "fieldtype": "Float", 
+   "insert_after": "no_of_fixed_days", 
+   "label": "OverTime Earning Factor", 
+   "precision": "1", 
+  }, 
+  {
+   "fieldname": "column_break_80", 
+   "fieldtype": "Column Break", 
+   "insert_after": "overtime_earning_factor", 
+   "label": "Default Salary Components", 
+  },   
+  {
+   "default": "Fixed Days", 
+   "description": "Used for Irregular Checkin-Checkout Deduction & Overtime Earning", 
+   "fieldname": "per_minute_amount_for_additional_salary_based_on", 
+   "fieldtype": "Select", 
+   "insert_after": "payroll_settings", 
+   "label": "Per Minute Amount For Additional Salary Based On", 
+   "options": "\nFixed Days\nWorking Days", 
+  }, 
+  {
+   "default": "30", 
+   "depends_on": "eval:doc.per_minute_amount_for_additional_salary_based_on=='Fixed Days'", 
+   "fieldname": "no_of_fixed_days", 
+   "fieldtype": "Int", 
+   "insert_after": "per_minute_amount_for_additional_salary_based_on", 
+   "label": "No. of Fixed Days", 
+  }, 
+  {
+   "fieldname": "payroll_settings", 
+   "fieldtype": "Section Break", 
+   "insert_after": "arrear_component", 
+   "label": "Additional Salary Settings", 
+  }, 
+  {
+   "fieldname": "arrear_component", 
+   "fieldtype": "Link", 
+   "insert_after": "hra_component", 
+   "label": "Arrear Component", 
+   "options": "Salary Component", 
+  }, 
+  {
+   "fieldname": "hra_component", 
+   "fieldtype": "Link", 
+   "insert_after": "basic_component", 
+   "label": "HRA Component", 
+   "options": "Salary Component", 
+  }, 
+  {
+   "fieldname": "basic_component", 
+   "fieldtype": "Link", 
+   "insert_after": "hra_section", 
+   "label": "Basic Component", 
+   "options": "Salary Component", 
+  }, 
+  {
+   "fieldname": "hra_section", 
+   "fieldtype": "Section Break", 
+   "insert_after": "asset_received_but_not_billed", 
+   "label": "HRA Settings", 
+  }
+		]
+	}
+
+	if not frappe.get_meta("Company").has_field("fhr_absent_component"):
+		create_custom_fields(company_field)      
+
+def set_company_fields():
+	make_property_setter('Company', "default_holiday_list", "reqd", "1", "Check",validate_fields_for_doctype=False)        

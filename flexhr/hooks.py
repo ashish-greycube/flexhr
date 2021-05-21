@@ -62,7 +62,10 @@ doctype_js = {
 # ------------
 
 # before_install = "flexhr.api.before_install"
-before_install = "flexhr.install_fixtures.install_fixtures"
+before_install = ["flexhr.install_fixtures.install_fixtures",
+"flexhr.install_fixtures.create_company_fields",
+"flexhr.install_fixtures.set_company_fields"
+]
 # after_install = "flexhr.api.after_install"
 
 # Desk Notifications
